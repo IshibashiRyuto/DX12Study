@@ -1,0 +1,200 @@
+#include "typedef.h"
+#maxloop -1
+//MMDのモデルデータ(PMX)形式
+
+const DWORD	FILESIZE = GetFileSize();
+
+//ヘッダー構造体
+struct t_header{
+BYTE magic[4];
+float version;
+BYTE bytesizesize;
+BYTE bytesize[8];
+};
+
+
+
+//材質リスト構造体
+struct t_material{
+float diffuse_color[3];
+float alpha;
+float specularity;
+float specular_color[3];
+float mirror_color[3];
+BYTE toon_index;
+BYTE edge_flag;
+DWORD face_vert_count;
+char texture_file_name[20];
+};
+
+//ボーンリスト構造体
+struct t_bone{
+char bone_name[20];
+WORD parent_bone_index;
+WORD tail_pos_bone_index;
+BYTE bone_type;
+WORD ik_parent_bone_index;
+float bone_head_pos[3];
+};
+
+//IKリスト構造体
+struct t_ik_data{
+WORD ik_bone_index;
+WORD ik_target_bone_index;
+BYTE ik_chain_length;
+WORD iterations;
+float control_weight;
+// WORD ik_child_bone_index[ik_chain_length];
+};
+
+//表情リスト構造体
+struct t_skin_data{
+char skin_name[20];
+DWORD skin_vert_count;
+BYTE skin_type;
+// t_skin_vert_data skin_vert_data[skin_vert_count];
+};
+//表情リスト構造体 type：base
+struct t_skin_vert_data_base{
+DWORD skin_vert_index;
+float skin_vert_pos[3];
+};
+//表情リスト構造体 type：base以外
+struct t_skin_vert_data_nobase{
+DWORD base_skin_vert_index;
+float skin_vert_pos_offset[3];
+};
+//ボーン枠用表示リスト構造体
+struct t_bone_disp{
+WORD bone_index;
+BYTE bone_disp_frame_index;
+};
+//物理演算_剛体リスト構造体
+struct t_rigidbody{
+char rigidbody_name[20];
+WORD rigidbody_rel_bone_index;
+BYTE rigidbody_group_index;
+WORD rigidbody_group_target;
+BYTE shape_type;
+float shape_w;
+float shape_h;
+float shape_d;
+float pos_pos[3];
+float pos_rot[3];
+float rigidbody_weight;
+float rigidbody_pos_dim;
+float rigidbody_rot_dim;
+float rigidbody_recoil;
+float rigidbody_friction;
+BYTE rigidbody_type;
+};
+//物理演算_ジョイントリスト構造体
+struct t_joint{
+char joint_name[20];
+DWORD joint_rigidbody_a;
+DWORD joint_rigidbody_b;
+float joint_pos[3];
+float joint_rot[3];
+float constrain_pos_1[3];
+float constrain_pos_2[3];
+float constrain_rot_1[3];
+float constrain_rot_2[3];
+float spring_pos[3];
+float spring_rot[3];
+};
+
+
+//●解析開始！
+DWORD i;
+
+//ヘッダー読み込み
+$t_header header;
+
+//モデル
+$DWORD modelNameSize;
+$char modelName[modelNameSize];
+
+$DWORD modelEngSize;
+$char modelEng[modelEngSize];
+
+$DWORD commentSize;
+$char comment[commentSize];
+
+$DWORD commentESize;
+$char commentE[commentESize];
+
+//頂点リスト構造体
+struct t_vertex
+{
+	float pos[3];
+	float normal_vec[3];
+	float uv[2];
+	float addUV[header.bytesize[1]];
+	BYTE weight_type;
+};
+
+//頂点
+$DWORD vertexCount;
+for(int i=0;i<vertexCount;++i){
+	string edge_scale="EDGE_SCALE_" + tostr(i) + "_";
+	$t_vertex vertex;
+	switch(vertex.weight_type){
+		case 0://BDEF1
+			if(header.bytesize[2]==2){
+				$WORD boneIndex;
+			}else if(header.bytesize[2]==4){
+				$DWORD boneIndex;	
+			}else{
+				$BYTE boneIndex;	
+			}
+			break;
+		case 1://BDEF2
+			if(header.bytesize[2]==2){
+				$WORD boneIndex[2];
+				$float bone_weight;
+			}else if(header.bytesize[2]==4){
+				$DWORD boneIndex[2];	
+				$float bone_weight;
+			}else{
+				$BYTE boneIndex[2];
+				$float bone_weight;	
+			}
+			
+			break;
+		case 2://BDEF3
+			if(header.bytesize[2]==2){
+				$WORD boneIndex[4];
+			}else if(header.bytesize[2]==4){
+				$DWORD boneIndex[4];	
+			}else{
+				$BYTE boneIndex[4];	
+			}
+			$float bone_weight[4];
+			break;
+		case 3://SDEF
+			if(header.bytesize[2]==2){
+				$WORD boneIndex[2];
+			}else if(header.bytesize[2]==4){
+				$DWORD boneIndex[2];	
+			}else{
+				$BYTE boneIndex[2];	
+			}
+			$float bone_weight;
+			$float SDEF_C[3];
+			$float SDEF_R0[3];
+			$float SDEF_R1[3];
+			break;
+	}
+	$float edge_scale;
+}
+
+$DWORD indexCount;
+
+if(header.bytesize[2]==2){
+	$WORD face_index[indexCount];
+}else if(header.bytesize[2]==4){
+	$DWORD face_index[indexCount];	
+}else{
+	$BYTE face_index[indexCount];	
+}
+
