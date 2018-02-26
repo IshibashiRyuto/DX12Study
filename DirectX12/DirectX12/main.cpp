@@ -7,14 +7,22 @@
 #include <DirectXMath.h>
 #include <vector>
 
+using namespace DirectX;
+
 // 定数定義
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
+
+// 構造体定義
+typedef struct VERTEX {
+	XMFLOAT3 pos;		//座標
+}Vertex;
 
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdShow)
 {
+
 	// ウィンドウクラスの登録
 	WNDCLASSEX w = {};
 	w.cbSize = sizeof(WNDCLASSEX);
@@ -75,6 +83,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdSh
 	{
 		isInit = false;
 	}
+
 
 	//コマンド関連変数定義
 	ID3D12CommandAllocator* _commandAllocator = nullptr;	//コマンドアロケータ
@@ -229,7 +238,88 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdSh
 		return -1;
 	}
 
+	/*
+#if defined(_DEBUG)
+	// DirectX12のデバッグレイヤーを有効にする
+	{
+		ID3D12Debug	*debugController;
+		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
+			debugController->EnableDebugLayer();
+		}
+	}
+#endif
+*/
+
+	/*三角ポリの表示*/
+	// 三角ポリの頂点定義
+	Vertex vertices[] = { { { 0.0f,0.0f,0.0f } },
+	{ { 1.0f,0.0f,0.0f } },
+	{ { 0.0f,-1.0f,0.0f } } };
+
+	// 頂点レイアウトの定義
+	D3D12_INPUT_ELEMENT_DESC element[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, D3D12_APPEND_ALIGNED_ELEMENT, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0, }
+	};
+
+	// 頂点バッファ作成
+	ID3D12Resource * _vertexBuffer = nullptr;
+	dev->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices)),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&_vertexBuffer));
+	char* buf;
+
+	_vertexBuffer->Map(0, nullptr, (void**)&buf);
+	memcpy(buf, vertices, sizeof(vertices));
+	_vertexBuffer->Unmap(0, nullptr);
 	
+
+	// 頂点バッファビューの宣言
+	D3D12_VERTEX_BUFFER_VIEW _vbView = {};
+	_vbView.BufferLocation = _vertexBuffer->GetGPUVirtualAddress();
+	_vbView.StrideInBytes = sizeof(Vertex);
+	_vbView.SizeInBytes = sizeof(vertices);
+	
+	// シェーダの読み込み
+	ID3DBlob* vertexShader = nullptr;
+	ID3DBlob* pixelShader = nullptr;
+
+
+	result = D3DCompileFromFile(TEXT("shader.hlsl"), 
+		nullptr,
+		nullptr, 
+		"BaseVS",
+		"vs_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		0,
+		&vertexShader,
+		nullptr);
+
+	if (FAILED(result))
+	{
+		isInit = false;
+	}
+	result = D3DCompileFromFile(TEXT("shader.hlsl"),
+		nullptr,
+		nullptr,
+		"BasePS",
+		"ps_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		0,
+		&pixelShader,
+		nullptr);
+
+	if (FAILED(result))
+	{
+		isInit = false;
+	}
+
+	//PSO初期化
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsDesc;
+
+
 	/*カラークリア処理*/
 	float color[4] = { 1.0f,0.0f,0.0f,1.0f };
 
@@ -240,6 +330,15 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdSh
 	vp.Height = WINDOW_HEIGHT;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
+
+
+
+	// 処理失敗
+	if (!isInit)
+	{
+		MessageBox(hwnd, TEXT("DirectXの初期化に失敗しました"), TEXT("初期化失敗"), MB_OK);
+		return -1;
+	}
 
 
 	int bbIndex = 0;
