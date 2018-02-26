@@ -1,10 +1,10 @@
 
-float4 BaseVS( float4 pos: POSITION) : SV_POSITION
+float4 BaseVS( float3 pos: POSITION) : SV_POSITION
 {
-	return pos;
+	return float4(pos,1.0f);
 }
 
-float4 BasePS(float4 pos: POSITION ) : SV_Target
+float4 BasePS(float4 pos: SV_POSITION ) : SV_Target
 {
 	return float4(1,1,1,1);
 }

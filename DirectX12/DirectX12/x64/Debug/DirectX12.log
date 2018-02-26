@@ -1,4 +1,2 @@
-﻿  main.cpp
-c:\users\drago\desktop\directx12\dx12study\directx12\directx12\main.cpp(320): warning C4101: 'gpsDesc': ローカル変数は 1 度も使われていません。
-  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.exe
+﻿  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.exe
   DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.pdb (Partial PDB)

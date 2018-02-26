@@ -7,6 +7,8 @@
 #include <DirectXMath.h>
 #include <vector>
 
+#include <cstdio>
+
 using namespace DirectX;
 
 // 定数定義
@@ -53,6 +55,21 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdSh
 	ShowWindow(hwnd, SW_SHOW);
 
 	// D3D12初期化処理
+
+
+#ifdef _DEBUG
+	{
+		// デバッグレイヤーの有効化
+		ID3D12Debug* debugController;
+		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+		{
+			debugController->EnableDebugLayer();
+			debugController->Release();
+			debugController = nullptr;
+		}
+	}
+#endif
+
 	bool isInit = true;		// 初期化成功か判別するフラグ
 
 	// D3D12デバイスの生成
@@ -238,43 +255,41 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdSh
 		return -1;
 	}
 
-	/*
-#if defined(_DEBUG)
-	// DirectX12のデバッグレイヤーを有効にする
-	{
-		ID3D12Debug	*debugController;
-		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
-			debugController->EnableDebugLayer();
-		}
-	}
-#endif
-*/
+
 
 	/*三角ポリの表示*/
 	// 三角ポリの頂点定義
-	Vertex vertices[] = { { { 0.0f,0.0f,0.0f } },
-	{ { 1.0f,0.0f,0.0f } },
-	{ { 0.0f,-1.0f,0.0f } } };
+	Vertex vertices[] = { { { 0.0f,0.7f,0.0f } },
+	{ { 0.4f,-0.5f,0.0f } },
+	{ { -0.4f,-0.5f,0.0f } }, };
 
 	// 頂点レイアウトの定義
-	D3D12_INPUT_ELEMENT_DESC element[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, D3D12_APPEND_ALIGNED_ELEMENT, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0, }
+	D3D12_INPUT_ELEMENT_DESC inputLayoutDescs[] = {
+		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }, 
 	};
 
 	// 頂点バッファ作成
-	ID3D12Resource * _vertexBuffer = nullptr;
+	ID3D12Resource *_vertexBuffer = nullptr;
 	dev->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
 		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices)),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&_vertexBuffer));
+
 	char* buf;
+
 
 	_vertexBuffer->Map(0, nullptr, (void**)&buf);
 	memcpy(buf, vertices, sizeof(vertices));
 	_vertexBuffer->Unmap(0, nullptr);
-	
+
+	/*
+	FILE *fp;
+	fopen_s(&fp, "memoryDump.bin", "wb");
+	fwrite(buf, sizeof(vertices), 1, fp);
+	fclose(fp);
+	*/
 
 	// 頂点バッファビューの宣言
 	D3D12_VERTEX_BUFFER_VIEW _vbView = {};
@@ -316,12 +331,33 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdSh
 		isInit = false;
 	}
 
-	//PSO初期化
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsDesc;
+	// PSO初期化
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsDesc = {};
+	ID3D12PipelineState* _pipelineState = nullptr;
 
+	gpsDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	gpsDesc.DepthStencilState.DepthEnable = FALSE;					// 深度を使用するかどうか
+	gpsDesc.DepthStencilState.StencilEnable = FALSE;				// マスクを使用するかどうか
+	gpsDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader);
+	gpsDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader);
+	gpsDesc.InputLayout.NumElements = sizeof(inputLayoutDescs) / sizeof(D3D12_INPUT_ELEMENT_DESC);
+	gpsDesc.InputLayout.pInputElementDescs = inputLayoutDescs;
+	gpsDesc.pRootSignature = rootSignature;
+	gpsDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	gpsDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	gpsDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	gpsDesc.NumRenderTargets = 1;
+	gpsDesc.SampleDesc.Count = 1;
+	gpsDesc.SampleMask = 0;
 
+	result = dev->CreateGraphicsPipelineState(&gpsDesc, IID_PPV_ARGS(&_pipelineState));
+
+	if (FAILED(result))
+	{
+		isInit = false;
+	}
 	/*カラークリア処理*/
-	float color[4] = { 1.0f,0.0f,0.0f,1.0f };
+	float color[4] = { 0.0f,0.0f,1.0f,1.0f };
 
 	D3D12_VIEWPORT vp;
 	vp.TopLeftX = 0;
@@ -346,47 +382,78 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdSh
 	MSG msg = {};
 	while (true)
 	{
-		// コマンドアロケータとリストのリセット処理
-		result = _commandAllocator->Reset();
-		result = _commandList->Reset(_commandAllocator, nullptr);
-
-
-		// 描画先変更処理
-		bbIndex = swapChain->GetCurrentBackBufferIndex();
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(descriptorHeap->GetCPUDescriptorHandleForHeapStart(), bbIndex, descriptorSize);
-		_commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
-
-		// カラーの変更
-		//_commandList->RSSetViewports(1, &vp);
-		_commandList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
-		_commandList->Close();
-		
-		// コマンドリストの実行
-		_commandQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&_commandList);
-		
-
-		// フェンスによる「待ち」の処理実装
-		++_fenceValue;
-		_commandQueue->Signal(_fence, _fenceValue); 
-		while (_fence->GetCompletedValue() != _fenceValue)
-		{
-		}
-
-
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+			if (msg.message == WM_QUIT)
+			{
+				break;
+			}
 		}
-		if (msg.message == WM_QUIT)
+		else
 		{
-			break;
+
+
+			// ルートシグニチャを設定
+			_commandList->SetGraphicsRootSignature(rootSignature);
+
+			// ビューポートのセット
+			_commandList->RSSetViewports(1, &vp);
+
+			// シザーレクトのセット
+			D3D12_RECT rc = { 0,0,WINDOW_WIDTH, WINDOW_HEIGHT };
+			_commandList->RSSetScissorRects(1, &rc);
+
+			// 描画先バッファの取得
+			bbIndex = swapChain->GetCurrentBackBufferIndex();
+			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(descriptorHeap->GetCPUDescriptorHandleForHeapStart(), bbIndex, descriptorSize);
+
+			// リソースバリア
+			_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[bbIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+
+			// 描画先変更処理
+			_commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+
+			// カラーの変更
+			_commandList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
+
+
+			// プリミティブトポロジのセット
+			_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			// 頂点バッファビューのセット
+			_commandList->IASetVertexBuffers(0, 1, &_vbView);
+			_commandList->SetPipelineState(_pipelineState);
+
+			// 頂点データのドロー
+			_commandList->DrawInstanced(3, 1, 0, 0);
+
+			// リソースバリア
+			_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[bbIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
+			// コマンドの記録終了
+			_commandList->Close();
+
+
+			// コマンドリストの実行
+			_commandQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&_commandList);
+
+			// フェンスによる「待ち」の処理実装
+			++_fenceValue;
+			_commandQueue->Signal(_fence, _fenceValue);
+			while (_fence->GetCompletedValue() != _fenceValue)
+			{
+			}
+
+			// コマンドアロケータとリストのリセット処理
+			result = _commandAllocator->Reset();
+			result = _commandList->Reset(_commandAllocator, _pipelineState);
+
+			// スワップ
+			swapChain->Present(1, 0);
 		}
-		// スワップ
-		swapChain->Present(1, 0);
-
-
-
 	}
 	
 	//デバイスのリリース
