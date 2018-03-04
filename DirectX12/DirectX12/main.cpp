@@ -348,7 +348,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdSh
 	gpsDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	gpsDesc.NumRenderTargets = 1;
 	gpsDesc.SampleDesc.Count = 1;
-	gpsDesc.SampleMask = 0;
+	gpsDesc.SampleMask = UINT_MAX;
 
 	result = dev->CreateGraphicsPipelineState(&gpsDesc, IID_PPV_ARGS(&_pipelineState));
 

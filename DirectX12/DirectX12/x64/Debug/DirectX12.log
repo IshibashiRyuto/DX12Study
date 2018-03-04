@@ -1,2 +1,4 @@
-﻿  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.exe
+﻿  main.cpp
+  LINK : 前回のインクリメンタル リンクで C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.exe が見つからなかったか、ビルドされませんでした。フル リンクを行います。
+  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.exe
   DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.pdb (Partial PDB)
