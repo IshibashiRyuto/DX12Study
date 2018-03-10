@@ -2,6 +2,7 @@
 
 
 #include "Dx12Device.h"
+#include "MMDLoader.h"
 
 
 
@@ -45,11 +46,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpStr, int nCmdSh
 	{
 		return -1;
 	}
-
-	/*カラークリア処理*/
-	float color[4] = { 0.0f,0.0f,1.0f,1.0f };
-
-
 
 	// ウィンドウズメインループ
 	MSG msg = {};

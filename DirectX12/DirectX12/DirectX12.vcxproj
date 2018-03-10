@@ -180,10 +180,11 @@
   <ItemGroup>
     <ClCompile Include="Dx12Device.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MMDLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="d3dx12.h" />
     <ClInclude Include="Dx12Device.h" />
+    <ClInclude Include="MMDLoader.h" />
     <ClInclude Include="Singleton.h" />
   </ItemGroup>
   <ItemGroup>
