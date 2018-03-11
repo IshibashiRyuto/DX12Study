@@ -420,7 +420,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		_indexBufferView.SizeInBytes = (UINT)(pmdIndexData.size() * sizeof(short));
 
 		// 頂点インデックスのマップ
-		_verIndexBuffer->Map(0, nullptr, (void**)buf);
+		_verIndexBuffer->Map(0, nullptr, (void**)&buf);
 		memcpy(buf, &pmdIndexData[0], pmdIndexData.size() * sizeof(short));
 		_verIndexBuffer->Unmap(0, nullptr);
 
@@ -689,8 +689,8 @@ void Dx12Device::Render()
 	// 頂点データのドロー
 	UINT indexNum = MMDLoader::Instance()->GetIndexData().size();
 	//_commandList->DrawInstanced(4, 1, 0, 0);
-	_commandList->DrawInstanced(MMDLoader::Instance()->GetVertexData().size(), 1, 0, 0);
-	//_commandList->DrawIndexedInstanced(indexNum, 1, 0, 0, 0);
+	//_commandList->DrawInstanced(MMDLoader::Instance()->GetVertexData().size(), 1, 0, 0);
+	_commandList->DrawIndexedInstanced(indexNum, 1, 0, 0, 0);
 
 	// リソースバリア
 	_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_renderTargets[backBufferIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
