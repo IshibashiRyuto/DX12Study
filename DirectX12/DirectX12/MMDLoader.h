@@ -11,7 +11,6 @@ typedef struct
 	float version;
 	char model_name[20];
 	char comment[256];
-	unsigned int vertexNum;
 }PMD_HEADER;
 
 #pragma pack(1)
@@ -41,12 +40,16 @@ public:
 
 	bool Load();
 
-	const std::vector<PMD_VERTEX>& GetVertexData();
+	const std::vector<PMD_VERTEX>& GetVertexData();	// 頂点データへの参照を返す
+	const std::vector<unsigned short>& GetIndexData();	// 頂点インデックスデータへの参照を返す
 
 private:
 	MMDLoader();
 	PMD_HEADER pmdHeader;
 	char pmdSignature[3];
-	std::vector<PMD_VERTEX> vertex;
+	unsigned int vertexCount;			// 頂点数
+	unsigned int faceVertexCount;		// 面頂点の数
+	std::vector<PMD_VERTEX> vertex;		// 頂点データ
+	std::vector<unsigned short> faceVertexIndex;	// 面頂点インデックスデータ
 };
 

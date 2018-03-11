@@ -64,6 +64,9 @@ private:
 	ID3D12DescriptorHeap* _descriptorHeapSRV{ nullptr };			// (SRVの)デスクリプタヒープ
 	UINT srvHandle{ 0 };
 
+	ID3D12Resource *_verIndexBuffer{ nullptr };					// 頂点インデックスバッファ
+	D3D12_INDEX_BUFFER_VIEW _indexBufferView{};					// 頂点インデックスバッファビュー
+	
 	ID3D12Fence *_fence{ nullptr };
 	UINT64 _fenceValue{ 0 };
 	D3D12_VERTEX_BUFFER_VIEW _vbView = {};

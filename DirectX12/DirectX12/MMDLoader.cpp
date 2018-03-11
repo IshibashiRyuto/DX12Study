@@ -34,17 +34,17 @@ bool MMDLoader::Load()
 	// ヘッダデータ読み込み
 	fread(&pmdHeader, sizeof(pmdHeader), 1, fp);
 
-
+	
 	// 頂点情報の読み込み
-	vertex.resize(pmdHeader.vertexNum);
-	fread(&vertex[0], (size_t)PMD_VERTEX_SIZE, vertex.size(), fp);
-	/*
-	for (int i = 0; i < vertex.size(); i++)
-	{
-		vertex[i] = PMD_VERTEX{};
-		fread(&vertex[i], (size_t)PMD_VERTEX_SIZE, 1, fp);
-	}
-	*/
+	fread(&vertexCount, sizeof(int), 1, fp);
+	vertex.resize(vertexCount);
+	fread(&vertex[0], sizeof(PMD_VERTEX), vertex.size(), fp);
+	
+	// 頂点インデックス情報読み込み
+	fread(&faceVertexCount, sizeof(int), 1, fp);
+	faceVertexIndex.resize(faceVertexCount);
+	fread(&faceVertexIndex[0], sizeof(short), faceVertexCount, fp);
+
 	fclose(fp);
 	return true;
 }
@@ -52,4 +52,9 @@ bool MMDLoader::Load()
 const std::vector<PMD_VERTEX>& MMDLoader::GetVertexData()
 {
 	return vertex;
+}
+
+const std::vector<unsigned short>& MMDLoader::GetIndexData()
+{
+	return faceVertexIndex;
 }

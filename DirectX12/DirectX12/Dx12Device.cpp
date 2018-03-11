@@ -239,7 +239,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		CD3DX12_ROOT_SIGNATURE_DESC rsd = {};
 		//rsd.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 		rsd.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-		rsd.NumParameters = rootParam.size();
+		rsd.NumParameters = (UINT)rootParam.size();
 		rsd.pParameters = rootParam.data();
 		rsd.NumStaticSamplers = 1;
 		rsd.pStaticSamplers = &samplerDesc;
@@ -320,7 +320,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		gpsDesc.pRootSignature = _rootSignature;
 		gpsDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 		gpsDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		gpsDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+		gpsDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		gpsDesc.NumRenderTargets = 1;
 		gpsDesc.SampleDesc.Count = 1;
 		gpsDesc.SampleMask = UINT_MAX;
@@ -368,15 +368,16 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 	};
 
 
-	// MMDデータ
-	std::vector<PMD_VERTEX> pmdData;
-	pmdData = MMDLoader::Instance()->GetVertexData();
-
 	// 頂点バッファ作成
 	{
+
+		// MMDデータ
+		auto pmdVertexData = MMDLoader::Instance()->GetVertexData();
+		auto pmdIndexData = MMDLoader::Instance()->GetIndexData();
+
 		result = _dev->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(sizeof(PMD_VERTEX) * pmdData.size()),
+			&CD3DX12_RESOURCE_DESC::Buffer(sizeof(PMD_VERTEX) * pmdVertexData.size()),
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(&_vertexBuffer));
@@ -386,28 +387,52 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 			MessageBox(nullptr, TEXT("Failed Create VertexBuffer."), TEXT("Failed"), MB_OK);
 			return false;
 		}
+
+	   // 頂点バッファビューの宣言
+		_vbView.BufferLocation = _vertexBuffer->GetGPUVirtualAddress();
+		_vbView.StrideInBytes = sizeof(PMD_VERTEX);
+		_vbView.SizeInBytes = (UINT)(pmdVertexData.size() * sizeof(PMD_VERTEX));
+
+		// 頂点のマップ
+		char* buf;
+		_vertexBuffer->Map(0, nullptr, (void**)&buf);
+		memcpy(buf, &pmdVertexData[0], pmdVertexData.size() * sizeof(PMD_VERTEX));
+		_vertexBuffer->Unmap(0, nullptr);
+
+
+		// 頂点インデックスバッファ作成
+		result = _dev->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(sizeof(unsigned short) * pmdIndexData.size()),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&_verIndexBuffer));
+
+		if (FAILED(result))
+		{
+			MessageBox(nullptr, TEXT("Failed Create VertexIndexBuffer."), TEXT("Failed"), MB_OK);
+			return false;
+		}
+
+		// 頂点インデックスバッファビューの宣言
+		_indexBufferView.BufferLocation = _verIndexBuffer->GetGPUVirtualAddress();
+		_indexBufferView.Format = DXGI_FORMAT_R16_UINT;
+		_indexBufferView.SizeInBytes = (UINT)(pmdIndexData.size() * sizeof(short));
+
+		// 頂点インデックスのマップ
+		_verIndexBuffer->Map(0, nullptr, (void**)buf);
+		memcpy(buf, &pmdIndexData[0], pmdIndexData.size() * sizeof(short));
+		_verIndexBuffer->Unmap(0, nullptr);
+
+		/*
+		// マップした頂点インデックスをバイナリとして出力
+		FILE *fp;
+		fopen_s(&fp, "indexData.bin", "wb");
+		fwrite(buf, sizeof(short), pmdIndexData.size(), fp);
+		fclose(fp);
+		*/
+
 	}
-
-
-	// 頂点のマップ
-	char* buf;
-	_vertexBuffer->Map(0, nullptr, (void**)&buf);
-	memcpy(buf, &pmdData[0], pmdData.size() * sizeof(PMD_VERTEX));
-	_vertexBuffer->Unmap(0, nullptr); 
-
-	 
-	/*
-	FILE *fp;
-	fopen_s(&fp, "memoryDump.bin", "wb");
-	fwrite(buf, pmdData.size() * sizeof(PMD_VERTEX), 1, fp); 
-	fclose(fp);
-	*/
-
-	// 頂点バッファビューの宣言
-	_vbView.BufferLocation = _vertexBuffer->GetGPUVirtualAddress();
-	_vbView.StrideInBytes = 36;// sizeof(PMD_VERTEX);
-	_vbView.SizeInBytes = pmdData.size() * sizeof(PMD_VERTEX);
-
 
 	/*テクスチャリソース設定*/
 	{
@@ -506,12 +531,12 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 	{
 
 		world = DirectX::XMMatrixIdentity();
-		eye = { 0,5,-10 };
-		target = { 0,5,0 };
+		eye = { 0,10,-10 };
+		target = { 0,10,0 };
 		upper = { 0,-1,0 };
 		camera = DirectX::XMMatrixLookAtLH(eye, target, upper);
 
-		projection = DirectX::XMMatrixPerspectiveFovLH(30.0f, 1.0f, 0.1f, 50.f);
+		projection = DirectX::XMMatrixPerspectiveFovLH(3.14159265f/ 4.0f * 5.5 , 1.0f, 0.1f, 50.f);
 
 		matrix = world * camera * projection;
 
@@ -621,7 +646,7 @@ void Dx12Device::Render()
 	/*
 	_commandList->SetDescriptorHeaps(2, descriptorHeaps);
 
-	_commandList->SetGraphicsRootDescriptorTable(0, descriptorHeapSRV->GetGPUDescriptorHandleForHeapStart());
+	_commandList->SetGraphicsRootDescriptorTable(0, _descriptorHeapSRV->GetGPUDescriptorHandleForHeapStart());
 	_commandList->SetGraphicsRootDescriptorTable(1, _cbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 	*/
 
@@ -653,15 +678,20 @@ void Dx12Device::Render()
 	//_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	//PMD表示用プリミティブトポロジのセット
-	_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+	_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 頂点バッファビューのセット
 	_commandList->IASetVertexBuffers(0, 1, &_vbView);
 
+	// 頂点インデックスバッファビューをセット
+	_commandList->IASetIndexBuffer(&_indexBufferView);
+
 	// 頂点データのドロー
+	UINT indexNum = MMDLoader::Instance()->GetIndexData().size();
 	//_commandList->DrawInstanced(4, 1, 0, 0);
 	_commandList->DrawInstanced(MMDLoader::Instance()->GetVertexData().size(), 1, 0, 0);
-	
+	//_commandList->DrawIndexedInstanced(indexNum, 1, 0, 0, 0);
+
 	// リソースバリア
 	_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_renderTargets[backBufferIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 

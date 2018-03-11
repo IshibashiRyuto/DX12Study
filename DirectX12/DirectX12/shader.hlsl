@@ -16,9 +16,9 @@ struct Out
 Out VSMain(float4 pos : POSITION /*, float2 uv: TEXCORD*/) 
 {
     Out result;
-    pos.xy = float2(-1, 1) + pos.xy / float2(640 / 2, -480 / 2);
+    //pos.xy = float2(-1, 1) + pos.xy / float2(640 / 2, -480 / 2);
     result.position = mul(wvp,pos);
-    //result.pos = mul(wvp, pos);
+    result.pos = pos;
     //result.uv = uv;
 
     return result;
