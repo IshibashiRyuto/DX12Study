@@ -38,18 +38,23 @@ bool MMDLoader::Load()
 	// 頂点情報の読み込み
 	fread(&vertexCount, sizeof(int), 1, fp);
 	vertex.resize(vertexCount);
-	fread(&vertex[0], sizeof(PMD_VERTEX), vertex.size(), fp);
+	fread(&vertex[0], sizeof(PmdVertex), vertex.size(), fp);
 	
 	// 頂点インデックス情報読み込み
 	fread(&faceVertexCount, sizeof(int), 1, fp);
 	faceVertexIndex.resize(faceVertexCount);
 	fread(&faceVertexIndex[0], sizeof(short), faceVertexCount, fp);
 
+	// マテリアル情報読み込み
+	fread(&materialCount, sizeof(int), 1, fp);
+	materials.resize(materialCount);
+	fread(&materials[0], sizeof(Material), materialCount, fp);
+
 	fclose(fp);
 	return true;
 }
 
-const std::vector<PMD_VERTEX>& MMDLoader::GetVertexData()
+const std::vector<PmdVertex>& MMDLoader::GetVertexData()
 {
 	return vertex;
 }
@@ -57,4 +62,9 @@ const std::vector<PMD_VERTEX>& MMDLoader::GetVertexData()
 const std::vector<unsigned short>& MMDLoader::GetIndexData()
 {
 	return faceVertexIndex;
+}
+
+const std::vector<Material>& MMDLoader::GetMaterialData()
+{
+	return materials;
 }

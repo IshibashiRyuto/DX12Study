@@ -20,6 +20,12 @@ typedef struct VERTEX {
 	DirectX::XMFLOAT2 uv;		//uv座標
 }Vertex;
 
+typedef struct BASE_MATRIXES
+{
+	DirectX::XMMATRIX world;
+	DirectX::XMMATRIX viewproj;
+}BaseMatrixes;
+
 class Dx12Device
 {
 public:
@@ -52,7 +58,7 @@ private:
 	IDXGISwapChain3* _swapChain;							// スワップチェイン
 	std::vector<ID3D12Resource*> _renderTargets;		//レンダーターゲットの実体
 	ID3D12RootSignature* _rootSignature{ nullptr };	//ルートシグネチャ
-	ID3D12DescriptorHeap* _descriptorHeapRTV{ nullptr };	// (RTVの)ディスクリプタヒープ
+	ID3D12DescriptorHeap* _rtvDescriptorHeap{ nullptr };	// (RTVの)ディスクリプタヒープ
 	UINT rtvDescriptorSize{ 0 };						// rtvのでスクリプタサイズ
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC> _inputLayoutDescs;	// 頂点レイアウト
@@ -61,7 +67,7 @@ private:
 	ID3D12PipelineState* _pipelineStateObject{ nullptr };		// パイプラインステートオブジェクト
 	ID3D12Resource *_vertexBuffer{ nullptr };					// 頂点バッファ
 	ID3D12Resource *_textureBuffer{ nullptr };					// テクスチャバッファ
-	ID3D12DescriptorHeap* _descriptorHeapSRV{ nullptr };			// (SRVの)デスクリプタヒープ
+	ID3D12DescriptorHeap* _srvDescriptorHeap{ nullptr };			// (SRVの)デスクリプタヒープ
 	UINT srvHandle{ 0 };
 
 	ID3D12Resource *_verIndexBuffer{ nullptr };					// 頂点インデックスバッファ
@@ -74,8 +80,15 @@ private:
 	D3D12_STATIC_SAMPLER_DESC samplerDesc{};
 
 
-	ID3D12Resource* _constantBuffer{ nullptr };
-	ID3D12DescriptorHeap* _cbvDescriptorHeap{ nullptr };
+	ID3D12Resource* _constantBuffer{ nullptr };				// 定数バッファ
+	ID3D12DescriptorHeap* _cbvDescriptorHeap{ nullptr };	// 定数バッファビューのでスクリプタヒープ
+
+	ID3D12Resource* _materialsConstantBuffer{ nullptr };	// マテリアル用定数バッファ
+	ID3D12DescriptorHeap* _materialsCbvDescriptorHeap{ nullptr };	// マテリアル用定数バッファビューのでスクリプタヒープ
+
+	ID3D12Resource* _depthBuffer{ nullptr };				//	深度バッファ
+	ID3D12DescriptorHeap* _dsvDescriptorHeap{ nullptr };	// 深度バッファのディスクリプタヒープ
+	D3D12_CLEAR_VALUE _depthClearValue{};					// 深度バッファのクリア値
 
 	int backBufferIndex;
 
@@ -84,7 +97,8 @@ private:
 	D3D12_VIEWPORT vp = { 0,0,WINDOW_WIDTH,WINDOW_HEIGHT,0.0f,1.0f};
 	D3D12_RECT rc = { 0,0,WINDOW_WIDTH, WINDOW_HEIGHT };
 
-	DirectX::XMMATRIX *_matrixAddress;
+	BaseMatrixes *_matrixAddress;
+	DirectX::XMFLOAT3 *_diffuseColorAddress;
 
 	DirectX::XMMATRIX world;
 	DirectX::XMVECTOR eye;
@@ -92,6 +106,7 @@ private:
 	DirectX::XMVECTOR upper;
 	DirectX::XMMATRIX camera;
 	DirectX::XMMATRIX projection;
-	DirectX::XMMATRIX matrix;
+
+	BaseMatrixes matrix;
 };
 
