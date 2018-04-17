@@ -57,3 +57,8 @@ void CommandList::Execute(ID3D12CommandQueue * pCommandQueue)
 	_commandList->Close();
 	pCommandQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&_commandList);
 }
+
+const ID3D12CommandList * CommandList::GetCommandList()
+{
+	return _commandList;
+}
