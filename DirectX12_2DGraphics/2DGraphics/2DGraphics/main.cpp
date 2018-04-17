@@ -1,4 +1,5 @@
 #include<Windows.h>
+#include "App.h"
 
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
@@ -7,6 +8,9 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpStr, int nCmdWnd)
 {
+	// アプリケーションクラスの実体を生成
+	App app;
+
 	// ウィンドウクラスの登録
 	WNDCLASSEX w = {};
 	w.cbSize = sizeof(WNDCLASSEX);
@@ -36,6 +40,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpStr, int nCmdWnd)
 	// ウィンドウ表示
 	ShowWindow(hwnd, SW_SHOW);
 
+	// アプリケーションのデバイス生成
+	if (!app.CreateDevice(hwnd))
+	{
+		MessageBox(hwnd, "mistake!", "デバイスの生成に失敗しました",MB_OK);
+	}
 
 	// ウィンドウズメインループ
 	MSG msg = {};

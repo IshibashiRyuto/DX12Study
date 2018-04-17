@@ -113,12 +113,12 @@ bool App::CreateDevice(HWND hwnd)
 		swapChainDesc.Flags = 0;
 
 
-		result = _factory->CreateSwapChainForHwnd(_commandQueue,
+		result = _factory->CreateSwapChainForHwnd(_commandQueue.Get(),
 			hwnd,
 			&swapChainDesc,
 			nullptr,
 			nullptr,
-			(IDXGISwapChain1**)(&_swapChain));
+			(IDXGISwapChain1**)(_swapChain.GetAddressOf()));
 		if (result != S_OK)
 		{
 			MessageBox(nullptr, TEXT("Failed Create CommandQueue."), TEXT("Failed"), MB_OK);
@@ -127,13 +127,30 @@ bool App::CreateDevice(HWND hwnd)
 	}
 
 
-	// rtvディスクリプタヒープのサイズを取得
-	UINT descriptorHeapSize = 0;
-	descriptorHeapSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-
-	//レンダーターゲットビューの生成
+	// RTVディスクリプタ生成処理
 	{
+		// ディスクリプタヒープ用パラメタ定義
+		D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+		descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		descriptorHeapDesc.NumDescriptors = FRAME_CNT;
+
+		//rtvディスクリプタヒープ生成
+
+		result = _dev->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&_rtvDescriptorHeap));
+		if (FAILED(result))
+		{
+			MessageBox(nullptr, TEXT("Failed Create Descriptor Heap."), TEXT("Failed"), MB_OK);
+			return false;
+		}
+
+		// rtvディスクリプタヒープのサイズを取得
+		UINT descriptorHeapSize = 0;
+		descriptorHeapSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+
+		//レンダーターゲットビューの生成
 		DXGI_SWAP_CHAIN_DESC swcDesc = {};				// スワップチェインの情報
 		_swapChain->GetDesc(&swcDesc);
 
@@ -155,13 +172,15 @@ bool App::CreateDevice(HWND hwnd)
 				if (FAILED(result))
 				{
 					MessageBox(nullptr, TEXT("Failed Create RTV."), TEXT("Failed"), MB_OK);
-					return false;S
+					return false;
 				}
 				_dev->CreateRenderTargetView(_renderTargets[i], nullptr, descriptorHandle);
 				descriptorHandle.Offset(1, rtvDescriptorSize);//ディスクリプタとキャンバス分オフセット
 			}
 		}
 	}
+
+
 	return true;
 }
 
