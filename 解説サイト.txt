@@ -1,0 +1,6 @@
+Discriptor,Discriptor Heap, DiscriptorTable, RootSignature‚ ‚½‚è‚Ì‰ğà
+https://sites.google.com/site/monshonosuana/directxno-hanashi-1/directx-145
+
+RootSignature‚ÉŠÖ‚·‚éŒö®‰ğà
+https://msdn.microsoft.com/en-us/library/windows/desktop/dn899123(v=vs.85).aspx
+

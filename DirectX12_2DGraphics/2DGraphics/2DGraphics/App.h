@@ -30,7 +30,7 @@ private:
 
 	HWND _hwnd;							// ウィンドウハンドル
 
-	ComPtr<IDXGIFactory4> _factory;			// DXGIインタフェースの生成機
+	ComPtr<IDXGIFactory4> _factory{ nullptr };			// DXGIインタフェースの生成機
 
 	D3D_FEATURE_LEVEL _level{};			// デバイスのフィーチャーレベル
 	ComPtr<ID3D12Device> _dev{ nullptr };		// デバイスポインタ
@@ -44,7 +44,13 @@ private:
 
 	std::vector<ComPtr<ID3D12Resource>> _renderTargets;		//レンダーターゲットの実体
 	ComPtr<ID3D12DescriptorHeap> _rtvDescriptorHeap{ nullptr };	// (RTVの)ディスクリプタヒープ
-	UINT rtvDescriptorSize{ 0 };						// rtvのでスクリプタサイズ
+	UINT _rtvDescriptorSize{ 0 };						// rtvのでスクリプタサイズ
 
+	ID3D12Resource* _depthBuffer{ nullptr };				//	深度バッファ
+	ID3D12DescriptorHeap* _dsvDescriptorHeap{ nullptr };	// 深度バッファのディスクリプタヒープ
+	D3D12_CLEAR_VALUE _depthClearValue{};					// 深度バッファのクリア値
+
+
+	D3D12_STATIC_SAMPLER_DESC _samplerDesc{};				// サンプラーの設定
 };
 

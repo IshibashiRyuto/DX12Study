@@ -1,5 +1,4 @@
 ﻿  Dx12Device.cpp
-c:\users\drago\desktop\directx12\dx12study\directx12\directx12\dx12device.cpp(658): warning C4267: '=': 'size_t' から 'UINT' に変換しました。データが失われているかもしれません。
-c:\users\drago\desktop\directx12\dx12study\directx12\directx12\dx12device.cpp(697): warning C4244: '=': 'unsigned __int64' から 'UINT' への変換です。データが失われる可能性があります。
-  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.exe
-  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.pdb (Partial PDB)
+c:\users\1701362\desktop\ishibashi_github\dx12study\directx12\directx12\dx12device.cpp(659): warning C4267: '=': 'size_t' から 'UINT' に変換しました。データが失われているかもしれません。
+c:\users\1701362\desktop\ishibashi_github\dx12study\directx12\directx12\dx12device.cpp(698): warning C4244: '=': 'unsigned __int64' から 'UINT' への変換です。データが失われる可能性があります。
+  DirectX12.vcxproj -> C:\Users\1701362\Desktop\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\DirectX12.exe

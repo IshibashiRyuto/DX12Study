@@ -235,6 +235,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		rootParam.push_back(prmCBV);
 
 
+		// ルートシグネチャの設定
 		CD3DX12_ROOT_SIGNATURE_DESC rsd = {};
 		//rsd.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 		rsd.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;

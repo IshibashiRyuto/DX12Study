@@ -161,7 +161,7 @@ bool App::CreateDevice(HWND hwnd)
 		_renderTargets.resize(renderTargetsNum);
 
 		// ディスクリプタ一つ当たりのサイズを取得
-		rtvDescriptorSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		_rtvDescriptorSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		{
 			// ディスクリプタハンドルの作成
 			CD3DX12_CPU_DESCRIPTOR_HANDLE descriptorHandle(_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -174,12 +174,81 @@ bool App::CreateDevice(HWND hwnd)
 					MessageBox(nullptr, TEXT("Failed Create RTV."), TEXT("Failed"), MB_OK);
 					return false;
 				}
-				_dev->CreateRenderTargetView(_renderTargets[i], nullptr, descriptorHandle);
-				descriptorHandle.Offset(1, rtvDescriptorSize);//ディスクリプタとキャンバス分オフセット
+				_dev->CreateRenderTargetView(_renderTargets[i].Get(), nullptr, descriptorHandle);
+				descriptorHandle.Offset(1, _rtvDescriptorSize);//ディスクリプタとキャンバス分オフセット
 			}
 		}
 	}
 
+	// サンプラの設定
+	{
+		_samplerDesc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+		_samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		_samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		_samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		_samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+		_samplerDesc.MinLOD = 0.0f;
+		_samplerDesc.MipLODBias = 0.0f;
+		_samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+		_samplerDesc.ShaderRegister = 0;
+		_samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		_samplerDesc.RegisterSpace = 0;
+		_samplerDesc.MaxAnisotropy = 0;
+		_samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	}
+	/*深度バッファ作成*/
+	{
+		D3D12_RESOURCE_DESC depthResDesc = {};
+		depthResDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		depthResDesc.Width = WINDOW_WIDTH;
+		depthResDesc.Height = WINDOW_HEIGHT;
+		depthResDesc.DepthOrArraySize = 1;
+		depthResDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		depthResDesc.SampleDesc.Count = 1;
+		depthResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+		D3D12_HEAP_PROPERTIES depthHeapProp = {};
+		depthHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
+		depthHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		depthHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+		_depthClearValue.DepthStencil.Depth = 1.0f;		// 深さ最大値
+		_depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+
+		result = _dev->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&depthResDesc,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			&_depthClearValue,
+			IID_PPV_ARGS(&_depthBuffer));
+
+		if (FAILED(result))
+		{
+			MessageBox(nullptr, TEXT("Failed Create Depth Buffer."), TEXT("Failed"), MB_OK);
+			return false;
+		}
+	}
+
+	/*深度バッファビューの作成*/
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+
+		dsvHeapDesc.NumDescriptors = 1;
+		dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+
+		result = _dev->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&_dsvDescriptorHeap));
+
+		if (FAILED(result))
+		{
+			MessageBox(nullptr, TEXT("Failed Create Depth Stencil View."), TEXT("Failed"), MB_OK);
+			return false;
+		}
+
+		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		_dev->CreateDepthStencilView(_depthBuffer, &dsvDesc, _dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	}
 
 	return true;
 }

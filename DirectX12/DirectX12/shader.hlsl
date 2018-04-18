@@ -8,6 +8,7 @@ cbuffer mat : register(b0)
     float3 diffuse;         // 基本色
 }
 
+
 struct Out
 {
     float4 position : SV_POSITION; // システム座標
