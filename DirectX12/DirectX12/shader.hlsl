@@ -5,9 +5,12 @@ cbuffer mat : register(b0)
 {
     float4x4 world;   //World 行列
     float4x4 viewproj; //View Projection行列
-    float3 diffuse;         // 基本色
 }
 
+cbuffer mat : register(b1)
+{
+	float3 diffuse;         // 基本色
+}
 
 struct Out
 {

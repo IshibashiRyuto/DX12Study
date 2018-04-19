@@ -216,6 +216,13 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		descriptorRangeCBV.RegisterSpace = 0;
 		descriptorRangeCBV.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+		//materialCBV用ディスクリプタレンジの設定
+		D3D12_DESCRIPTOR_RANGE descriptorRangeMatCBV;
+		descriptorRangeMatCBV.NumDescriptors = 1;
+		descriptorRangeMatCBV.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+		descriptorRangeMatCBV.BaseShaderRegister = 1;
+		descriptorRangeMatCBV.RegisterSpace = 0;
+		descriptorRangeMatCBV.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 		// SRV用ルートパラメータの設定
 		D3D12_ROOT_PARAMETER prmSRV;
@@ -230,6 +237,12 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		prmCBV.DescriptorTable = { 1,&descriptorRangeCBV };
 		prmCBV.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+		// materialCBV用ルートパラメータの設定
+		D3D12_ROOT_PARAMETER prmMatCBV;
+		prmMatCBV.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		prmMatCBV.DescriptorTable = { 1,&descriptorRangeMatCBV };
+		prmMatCBV.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 		/*
 		std::vector<D3D12_ROOT_PARAMETER> rootParam;
 		rootParam.push_back(prmSRV);
@@ -237,9 +250,10 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		*/
 
 		std::vector<D3D12_ROOT_PARAMETER> rootParam;
-		rootParam.resize(2);
+		rootParam.resize(3);
 		rootParam[0] = prmSRV;
 		rootParam[1] = prmCBV;
+		rootParam[2] = prmMatCBV;
 
 		// ルートシグネチャの設定
 		CD3DX12_ROOT_SIGNATURE_DESC rsd = {};
@@ -756,8 +770,9 @@ void Dx12Device::Render()
 	_commandList->SetGraphicsRootSignature(_rootSignature);
 
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { _cbvDescriptorHeap, _materialsCbvDescriptorHeap };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { _cbvDescriptorHeap, _materialsCbvDescriptorHeap, _srvDescriptorHeap };
 
+	
 	// SRVディスクリプタヒープの設定
 	_commandList->SetDescriptorHeaps(1, (&_srvDescriptorHeap));
 
@@ -765,19 +780,16 @@ void Dx12Device::Render()
 	_commandList->SetGraphicsRootDescriptorTable(0, _srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
 	// CBVディスクリプタヒープの設定
-	//_commandList->SetDescriptorHeaps(2, descriptorHeaps);
 	_commandList->SetDescriptorHeaps(1, &_cbvDescriptorHeap);
 
 	// CBVディスクリプタテーブルの設定
 	_commandList->SetGraphicsRootDescriptorTable(1, _cbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	
 
-	/*
-	_commandList->SetDescriptorHeaps(2, descriptorHeaps);
+	// materialCBVディスクリプタヒープの設定
+	//_commandList->SetDescriptorHeaps(1, &_materialsCbvDescriptorHeap);
 
-	_commandList->SetGraphicsRootDescriptorTable(0, _descriptorHeapSRV->GetGPUDescriptorHandleForHeapStart());
-	_commandList->SetGraphicsRootDescriptorTable(1, _cbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	*/
+	// materialCBVディスクリプタテーブルの設定
+	//_commandList->SetGraphicsRootDescriptorTable(2, _materialsCbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
 	
 	// ビューポートのセット
@@ -827,7 +839,7 @@ void Dx12Device::Render()
 	{
 		//*_diffuseColorAddress = materials[i].diffuseColor;
 		//_commandList->SetGraphicsRootDescriptorTable(2, handle);
-		//handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 		_commandList->DrawIndexedInstanced(materials[i].faceVertexCount, 1, vertexOffset, 0, 0);
 		vertexOffset += materials[i].faceVertexCount;
