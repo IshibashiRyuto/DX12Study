@@ -216,30 +216,49 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		descriptorRangeCBV.RegisterSpace = 0;
 		descriptorRangeCBV.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+		//マテリアルCBV用ディスクリプタレンジの設定
+		D3D12_DESCRIPTOR_RANGE descriptorRangeMatCBV;
+		descriptorRangeMatCBV.NumDescriptors = 1;
+		descriptorRangeMatCBV.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+		descriptorRangeMatCBV.BaseShaderRegister = 1;
+		descriptorRangeMatCBV.RegisterSpace = 0;
+		descriptorRangeMatCBV.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 		// SRV用ルートパラメータの設定
-		D3D12_ROOT_PARAMETER prmSRV;
+		D3D12_ROOT_PARAMETER prmSRV{};
 		prmSRV.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		prmSRV.DescriptorTable = { 1,&descriptorRangeSRV };
 		prmSRV.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 		
 
 		// CBV用ルートパラメータの設定
-		D3D12_ROOT_PARAMETER prmCBV;
+		D3D12_ROOT_PARAMETER prmCBV{};
 		prmCBV.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		prmCBV.DescriptorTable = { 1,&descriptorRangeCBV };
 		prmCBV.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+
+		// マテリアルCBV用ルートパラメータの設定
+		D3D12_ROOT_PARAMETER prmMatCBV{};
+		prmCBV.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		prmCBV.DescriptorTable = { 1,&descriptorRangeMatCBV };
+		prmCBV.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		/*
+		std::vector<D3D12_ROOT_PARAMETER> rootParam;
+		rootParam.resize(2);
+		rootParam[0] = prmSRV;
+		rootParam[1] = prmCBV;
+		//rootParam[2] = prmMatCBV;
+		*/
 		std::vector<D3D12_ROOT_PARAMETER> rootParam;
 		rootParam.push_back(prmSRV);
 		rootParam.push_back(prmCBV);
-
 
 		// ルートシグネチャの設定
 		CD3DX12_ROOT_SIGNATURE_DESC rsd = {};
 		//rsd.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 		rsd.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-		rsd.NumParameters = (UINT)rootParam.size();
 		rsd.pParameters = rootParam.data();
 		rsd.NumStaticSamplers = 1;
 		rsd.pStaticSamplers = &samplerDesc;
@@ -715,6 +734,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 			return false;
 		}
 
+		// バッファにセット
 		for (int i = 0; i < materials.size(); i++)
 		{
 			memcpy( (_diffuseColorAddress + i), &materials[i].diffuseColor, sizeof(Material::diffuseColor));
@@ -765,6 +785,13 @@ void Dx12Device::Render()
 	// CBVディスクリプタテーブルの設定
 	_commandList->SetGraphicsRootDescriptorTable(1, _cbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 	
+
+	// マテリアルCBVディスクリプタヒープの設定
+	//_commandList->SetDescriptorHeaps(1, (&_materialsCbvDescriptorHeap) );
+
+	// マテリアルCBVディスクリプタテーブルの設定
+	//_commandList->SetGraphicsRootDescriptorTable(2, _materialsCbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+
 
 	/*
 	_commandList->SetDescriptorHeaps(2, descriptorHeaps);
