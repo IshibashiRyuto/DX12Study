@@ -230,10 +230,16 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		prmCBV.DescriptorTable = { 1,&descriptorRangeCBV };
 		prmCBV.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+		/*
 		std::vector<D3D12_ROOT_PARAMETER> rootParam;
 		rootParam.push_back(prmSRV);
 		rootParam.push_back(prmCBV);
+		*/
 
+		std::vector<D3D12_ROOT_PARAMETER> rootParam;
+		rootParam.resize(2);
+		rootParam[0] = prmSRV;
+		rootParam[1] = prmCBV;
 
 		// ルートシグネチャの設定
 		CD3DX12_ROOT_SIGNATURE_DESC rsd = {};
