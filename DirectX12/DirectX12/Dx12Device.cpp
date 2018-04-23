@@ -614,7 +614,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		heapDesc.NumDescriptors = 1;
+		heapDesc.NumDescriptors = 1 + MMDLoader::Instance()->GetMaterialData().size();
 		result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&_cbvDescriptorHeap));
 
 		if (FAILED(result))
@@ -654,6 +654,8 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		cbvDesc.SizeInBytes = (sizeof(BaseMatrixes) + 0xff)& ~0xff;
 	
 		cbvHandle = _cbvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		
+
 		_dev->CreateConstantBufferView(&cbvDesc, cbvHandle);
 
 		D3D12_RANGE range = {};
@@ -673,11 +675,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		// モデルデータ取得
 		auto materials = MMDLoader::Instance()->GetMaterialData();
 
-		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		heapDesc.NumDescriptors = materials.size();
-		result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&_materialsCbvDescriptorHeap));
+	
 
 		if (FAILED(result))
 		{
@@ -718,7 +716,8 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		cbvDesc.SizeInBytes = bufferSize;
 
 
-		cbvHandle = _materialsCbvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		cbvHandle = _cbvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		cbvHandle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		
 		for (int i = 0; i < materials.size(); i++)
 		{
@@ -736,8 +735,9 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		}
 
 		for (int i = 0; i < materials.size(); i++)
+
 		{
-			memcpy( (_diffuseColorAddress + i), &materials[i].diffuseColor, sizeof(Material::diffuseColor));
+			memcpy( _diffuseColorAddress + (i * ((sizeof(Material::diffuseColor) + 0xff) & ~0xff) ), &materials[i].diffuseColor, ((sizeof(Material::diffuseColor) + 0xff) & ~0xff));
 		}
 	}
 	
@@ -770,8 +770,7 @@ void Dx12Device::Render()
 	_commandList->SetGraphicsRootSignature(_rootSignature);
 
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { _cbvDescriptorHeap, _materialsCbvDescriptorHeap, _srvDescriptorHeap };
-
+	
 	
 	// SRVディスクリプタヒープの設定
 	_commandList->SetDescriptorHeaps(1, (&_srvDescriptorHeap));
@@ -784,12 +783,6 @@ void Dx12Device::Render()
 
 	// CBVディスクリプタテーブルの設定
 	_commandList->SetGraphicsRootDescriptorTable(1, _cbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-
-	// materialCBVディスクリプタヒープの設定
-	//_commandList->SetDescriptorHeaps(1, &_materialsCbvDescriptorHeap);
-
-	// materialCBVディスクリプタテーブルの設定
-	//_commandList->SetGraphicsRootDescriptorTable(2, _materialsCbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
 	
 	// ビューポートのセット
@@ -832,14 +825,15 @@ void Dx12Device::Render()
 	UINT vertexOffset = 0;
 	auto materials = MMDLoader::Instance()->GetMaterialData();
 	
-	auto handle = _materialsCbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	auto handle = _cbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	//_commandList->SetDescriptorHeaps(1, &_materialsCbvDescriptorHeap);
 
 	for (int i = 0; i < materials.size(); i++)
 	{
 		//*_diffuseColorAddress = materials[i].diffuseColor;
-		//_commandList->SetGraphicsRootDescriptorTable(2, handle);
 		handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+		_commandList->SetGraphicsRootDescriptorTable(2, handle);
 
 		_commandList->DrawIndexedInstanced(materials[i].faceVertexCount, 1, vertexOffset, 0, 0);
 		vertexOffset += materials[i].faceVertexCount;

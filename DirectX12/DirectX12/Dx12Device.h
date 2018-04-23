@@ -84,7 +84,6 @@ private:
 	ID3D12DescriptorHeap* _cbvDescriptorHeap{ nullptr };	// 定数バッファビューのでスクリプタヒープ
 
 	ID3D12Resource* _materialsConstantBuffer{ nullptr };	// マテリアル用定数バッファ
-	ID3D12DescriptorHeap* _materialsCbvDescriptorHeap{ nullptr };	// マテリアル用定数バッファビューのでスクリプタヒープ
 
 	ID3D12Resource* _depthBuffer{ nullptr };				//	深度バッファ
 	ID3D12DescriptorHeap* _dsvDescriptorHeap{ nullptr };	// 深度バッファのディスクリプタヒープ
@@ -98,7 +97,7 @@ private:
 	D3D12_RECT rc = { 0,0,WINDOW_WIDTH, WINDOW_HEIGHT };
 
 	BaseMatrixes *_matrixAddress;
-	DirectX::XMFLOAT3 *_diffuseColorAddress;
+	char *_diffuseColorAddress;
 
 	DirectX::XMMATRIX world;
 	DirectX::XMVECTOR eye;
