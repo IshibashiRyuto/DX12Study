@@ -41,7 +41,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpStr, int nCmdWnd)
 	ShowWindow(hwnd, SW_SHOW);
 
 	// アプリケーションのデバイス生成
-	if (!app.CreateDevice(hwnd))
+	if (!app.Initialize(hwnd))
 	{
 		MessageBox(hwnd, "mistake!", "デバイスの生成に失敗しました",MB_OK);
 	}

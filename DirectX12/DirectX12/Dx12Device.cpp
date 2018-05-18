@@ -283,7 +283,6 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 	}
 
 
-
 	/*深度バッファ作成*/
 	{
 		D3D12_RESOURCE_DESC depthResDesc = {};
@@ -338,6 +337,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		_dev->CreateDepthStencilView(_depthBuffer, &dsvDesc, _dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	}
 
+	
 	// PMDデータの読み込み
 	MMDLoader::Instance()->Load();
 
@@ -769,8 +769,6 @@ void Dx12Device::Render()
 	// ルートシグニチャを設定
 	_commandList->SetGraphicsRootSignature(_rootSignature);
 
-
-	
 	
 	// SRVディスクリプタヒープの設定
 	_commandList->SetDescriptorHeaps(1, (&_srvDescriptorHeap));
