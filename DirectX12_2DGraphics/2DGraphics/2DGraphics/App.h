@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include "d3dx12.h"
 #include <dxgi1_4.h>
+#include <DirectXMath.h>
 #include <D3DCompiler.h>
 #include <vector>
 #include <wrl.h>
@@ -13,6 +14,13 @@ const int FRAME_CNT = 2;
 
 // ComPtr使用宣言
 using Microsoft::WRL::ComPtr;
+
+// 頂点
+struct Vertex
+{
+	DirectX::XMFLOAT3 pos;
+	DirectX::XMFLOAT3 normal;
+};
 
 class App
 {
@@ -32,6 +40,7 @@ public:
 	void Render();
 
 private:
+	const int INSTANCING_NUM = 100;			// オブジェクトのインスタンシング数
 
 	HWND _hwnd;														// ウィンドウハンドル
 
@@ -58,11 +67,21 @@ private:
 
 	ComPtr<ID3D12RootSignature> _rootSignature{ nullptr };			//ルートシグネチャ
 	D3D12_STATIC_SAMPLER_DESC _samplerDesc{};						// サンプラーの設定
-	std::vector<D3D12_INPUT_ELEMENT_DESC> _inputLayoutDescs;	// 頂点レイアウト
-	ComPtr<ID3DBlob> _vertexShader{ nullptr };							// 頂点シェーダ
-	ComPtr<ID3DBlob> _pixelShader{ nullptr };							// ピクセルシェーダ
-	ComPtr<ID3D12PipelineState> _pipelineStateObject{ nullptr };		// パイプラインステートオブジェクト
+	std::vector<D3D12_INPUT_ELEMENT_DESC> _inputLayoutDescs;		// 頂点レイアウト
+	ComPtr<ID3DBlob> _vertexShader{ nullptr };						// 頂点シェーダ
+	ComPtr<ID3DBlob> _pixelShader{ nullptr };						// ピクセルシェーダ
+	ComPtr<ID3D12PipelineState> _pipelineStateObject{ nullptr };	// パイプラインステートオブジェクト
 
+	ComPtr<ID3D12Fence> _fence;										// フェンスオブジェクト
+	UINT64 _fenceValue{ 0 };										// フェンス値
+
+	ComPtr<ID3D12Resource> _vertexBuffer;							// 頂点バッファ
+	D3D12_VERTEX_BUFFER_VIEW _vertexBufferView;						// 頂点バッファビュー
+	ComPtr<ID3D12Resource> _instancingBuffer;						// インスタンシング用のバッファ
+
+	Vertex vertices[3] = { {{0.0f,0.0f,0.0f}, {0.0f,0.0f,-1.0f}},
+	{{0.1f,0.0f, 5.0f}, { 0.0f,0.0f,-1.0f } },
+	{{0.0f,-0.1f,0.0f},{ 0.0f,0.0f,-1.0f } } };											// 頂点情報(仮)
 
 	/// @fn	CreateDevice
 	/// デバイスの生成処理
@@ -82,7 +101,6 @@ private:
 	/// @retval bool 処理が成功したか
 	/// true:成功 false:失敗
 	bool CreateCommandQueue();
-
 
 	/// @fn CreateSwapchain
 	/// スワップチェインの生成処理
@@ -138,5 +156,23 @@ private:
 	/// @retval bool 処理が成功したか
 	/// true:成功 false:失敗
 	bool CreateCommandList();
-};
 
+	/// @fn CreateFence
+	/// フェンスを生成する
+	/// @retval bool 処理が成功したか
+	/// true:成功 false:失敗
+	bool CreateFence();
+
+
+	/// @fn CreateVertexBuffer
+	/// 頂点バッファを作成する
+	/// @retval bool 処理が成功したか
+	/// true:成功 false:失敗
+	bool CreateVertexBuffer();
+
+	/// @fn CreateInstancingBuffer
+	/// インスタンシングに利用する行列を格納するバッファを作成する
+	/// @retval bool 処理が成功したか
+	/// true:成功 false:失敗
+	bool CreateInstancingBuffer();
+};

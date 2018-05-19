@@ -15,7 +15,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpStr, int nCmdWnd)
 	WNDCLASSEX w = {};
 	w.cbSize = sizeof(WNDCLASSEX);
 	w.lpfnWndProc = (WNDPROC)WindowProc;
-	w.lpszClassName = TEXT("DirectXTest");
+	w.lpszClassName = TEXT("2DGraphicsOnDirectX12");
 	w.hInstance = GetModuleHandle(0);
 	RegisterClassEx(&w);
 
@@ -26,7 +26,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpStr, int nCmdWnd)
 													   //ウィンドウ生成処理
 	HWND hwnd;
 	hwnd = CreateWindow(w.lpszClassName,
-		TEXT("DX12テスト"),
+		TEXT("2DGraphicsOnDx12"),
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -43,7 +43,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpStr, int nCmdWnd)
 	// アプリケーションのデバイス生成
 	if (!app.Initialize(hwnd))
 	{
-		MessageBox(hwnd, "mistake!", "デバイスの生成に失敗しました",MB_OK);
+		MessageBox(hwnd, TEXT("デバイスの生成に失敗しました"), TEXT("mistake!"),MB_OK);
+		return -1;
 	}
 
 	// ウィンドウズメインループ
@@ -61,6 +62,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpStr, int nCmdWnd)
 		}
 		else
 		{
+			app.Render();
 		}
 	}
 
