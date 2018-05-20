@@ -1,11 +1,16 @@
 //Texture2D<float4> tex : register(t0);
 //SamplerState smp : register(s0);
 
+cbuffer mat : register(b0)
+{
+	float3 offset[100];
+}
+
 struct VS_IN
 {
     float3 pos : POSITION;   
     float3 normal : NORMAL;
-    float3 offset : INSTANCE_OFFSET;
+	uint index : INSTANCE_INDEX;
 };
 
 struct Out
@@ -19,7 +24,7 @@ struct Out
 Out VSMain(VS_IN input) 
 {
     Out result;
-    result.pos = input.pos + input.offset;
+	result.pos = input.pos + offset[input.index];
     result.position = float4(result.pos, 1.0f);
     result.normal = input.normal;
     return result;

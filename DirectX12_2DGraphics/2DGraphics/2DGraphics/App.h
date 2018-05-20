@@ -18,8 +18,9 @@ using Microsoft::WRL::ComPtr;
 // 頂点
 struct Vertex
 {
-	DirectX::XMFLOAT3 pos;
+	DirectX::XMFLOAT3 pos;			// 座標
 	DirectX::XMFLOAT3 normal;
+	DirectX::XMFLOAT2 uv;
 };
 
 class App
@@ -79,10 +80,14 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW _vertexBufferView;						// 頂点バッファビュー
 	ComPtr<ID3D12Resource> _instancingBuffer;						// インスタンシング用のバッファ
 	D3D12_VERTEX_BUFFER_VIEW _instancingBufferView;					// インスタンシングバッファビュー
+	ComPtr<ID3D12Resource> _instancingConstantBuffer;				// インスタンシング用のコンスタントバッファ
+	ComPtr<ID3D12DescriptorHeap> _icbDescHeap;						// インスタンシング用コンスタントバッファのデスクリプタヒープ
 
-	Vertex vertices[4] = { {{0.0f,0.0f,0.0f}, {0.0f,0.0f,-1.0f}},
-	{{0.1f,0.0f, 0.0f}, { 0.0f,0.0f,-1.0f } },
-	{{0.0f,-0.1f,0.0f},{ 0.0f,0.0f,-1.0f } } };											// 頂点情報(仮)
+
+	Vertex vertices[4] = { {{0.0f,0.0f,0.0f}, {0.0f,0.0f,-1.0f},{0.0f,0.0f} },
+	{{0.1f,0.0f, 0.0f}, { 0.0f,0.0f,-1.0f }, {1.0f,0.0f} },
+	{{0.0f,-0.1f,0.0f}, { 0.0f,0.0f,-1.0f }, {0.0f,1.0f} },
+	{{0.1f,-0.1f,0.0f}, { 0.0f,0.0f,-1.0f }, {1.0f,1.0f} } };											// 頂点情報(仮)
 
 	/// @fn	CreateDevice
 	/// デバイスの生成処理

@@ -154,14 +154,24 @@ void App::Render()
 	// 描画初期化処理
 	_commandList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
 	_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, _depthClearValue.DepthStencil.Depth, 0, 0, nullptr);
-	_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	// データセット
+
+	//	VertexBufferを用いたインスタンシング
+	
 	D3D12_VERTEX_BUFFER_VIEW vbViews[2] = { _vertexBufferView, _instancingBufferView };
 	_commandList->IASetVertexBuffers(0, 2, vbViews);
+	
+
+	//_commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
+
+	// CBV
+	_commandList->SetDescriptorHeaps(1, _icbDescHeap.GetAddressOf());
+	_commandList->SetGraphicsRootDescriptorTable(0, _icbDescHeap->GetGPUDescriptorHandleForHeapStart());
 
 	// 描画処理
-	_commandList->DrawInstanced(3, INSTANCING_NUM, 0, 0);
+	_commandList->DrawInstanced(4, INSTANCING_NUM, 0, 0);
 
 	// 描画終了処理
 	_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_renderTargets[backBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -394,6 +404,23 @@ bool App::CreateRootSignature()
 
 	std::vector<D3D12_ROOT_PARAMETER> rootParam;
 
+	// CBV用ディスクリプタレンジの設定
+	D3D12_DESCRIPTOR_RANGE range;
+	range.NumDescriptors = 1;
+	range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	range.BaseShaderRegister = 0;
+	range.RegisterSpace = 0;
+	range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	// CBV用ルートパラメータの設定
+	D3D12_ROOT_PARAMETER prm;
+	prm.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	prm.DescriptorTable = { 1,&range };
+	prm.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	rootParam.resize(1);
+	rootParam[0] = prm;
+
 	// ルートシグネチャの設定
 	CD3DX12_ROOT_SIGNATURE_DESC rsd = {};
 	rsd.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -428,8 +455,8 @@ bool App::CreateResource()
 	{
 		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 });
 		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT,0,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0 });
-		//_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "TEXCORD",  0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 });
-		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "INSTANCE_OFFSET", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 });
+		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "TEXCORD",  0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 });
+		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "INSTANCE_INDEX", 0, DXGI_FORMAT_R32_UINT, 1,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 });
 	}
 
 	// シェーダの読み込み
@@ -594,11 +621,12 @@ bool App::CreateVertexBuffer()
 
 bool App::CreateInstancingBuffer()
 {
+	//vertexBuffer版
 	auto result = _dev->CreateCommittedResource
 	(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(DirectX::XMFLOAT3)*INSTANCING_NUM),
+		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(unsigned int)*INSTANCING_NUM),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(_instancingBuffer.GetAddressOf()));
@@ -609,24 +637,87 @@ bool App::CreateInstancingBuffer()
 		return false;
 	}
 
-	DirectX::XMFLOAT3 *buf;
+	unsigned  *buf;
 	_instancingBuffer->Map(0, nullptr, (void**)&buf);
+	for (unsigned int i = 0; i < INSTANCING_NUM; ++i)
+	{
+		*buf = i;
+		++buf;
+	}
+	_instancingBuffer->Unmap(0, nullptr);
+
+	_instancingBufferView.BufferLocation = _instancingBuffer->GetGPUVirtualAddress();
+	_instancingBufferView.StrideInBytes = sizeof(unsigned int);
+	_instancingBufferView.SizeInBytes = sizeof(unsigned int)*INSTANCING_NUM;
+
+	//constantBuffer版
+	D3D12_DESCRIPTOR_HEAP_DESC desc{};
+	desc.NumDescriptors = 1;
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	result = _dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(_icbDescHeap.GetAddressOf()));
+
+	if (FAILED(result))
+	{
+		MessageBox(nullptr, TEXT("Failed Create ConstantBuffer Descriptor Heap."), TEXT("Failed"), MB_OK);
+		return false;
+	}
+
+	D3D12_HEAP_PROPERTIES heapProp = {};
+	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+	heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	heapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProp.VisibleNodeMask = 1;
+	heapProp.CreationNodeMask = 1;
+
+	D3D12_RESOURCE_DESC resourceDesc = {};
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Width = (sizeof(DirectX::XMFLOAT3) * INSTANCING_NUM + 0xff)&~0xff;		//256byteAllinment
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	_dev->CreateCommittedResource(&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(_instancingConstantBuffer.GetAddressOf()) );
+	
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+	D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle = {};
+
+	cbvDesc.BufferLocation = _instancingConstantBuffer->GetGPUVirtualAddress();
+	cbvDesc.SizeInBytes = (sizeof(DirectX::XMFLOAT3) * INSTANCING_NUM + 0xff)&~0xff;
+
+	cbvHandle = _icbDescHeap->GetCPUDescriptorHandleForHeapStart();
+	
+	_dev->CreateConstantBufferView(&cbvDesc, cbvHandle);
+
+	DirectX::XMFLOAT3 *cBuf = nullptr;
+	D3D12_RANGE range = {};
+	result = _instancingConstantBuffer->Map(0, &range, (void**)(&cBuf));
+
+	if (FAILED(result))
+	{
+		MessageBox(nullptr, TEXT("Failed Map by constantBuffer."), TEXT("Failed"), MB_OK);
+		return false;
+	}
+
 	for (int i = 0; i < INSTANCING_NUM; ++i)
 	{
 		float x = (float)rand() / (float)RAND_MAX;
 		float y = (float)rand() / (float)RAND_MAX;
 		x = x * 2 - 1.0f;
 		y = y * 2 - 1.0f;
-		
+
 
 		DirectX::XMFLOAT3 pos(x, y, 0.0f);
-		*buf = pos;
-		++buf;
+		*cBuf = pos;
+		++cBuf;
 	}
-	_instancingBuffer->Unmap(0, nullptr);
 
-	_instancingBufferView.BufferLocation = _instancingBuffer->GetGPUVirtualAddress();
-	_instancingBufferView.StrideInBytes = sizeof(DirectX::XMFLOAT3);
-	_instancingBufferView.SizeInBytes = sizeof(DirectX::XMFLOAT3)*INSTANCING_NUM;
 	return true;
 }
