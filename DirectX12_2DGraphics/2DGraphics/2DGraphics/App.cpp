@@ -1,4 +1,5 @@
 #include "App.h"
+#include <math.h>
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -156,10 +157,11 @@ void App::Render()
 	_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// データセット
-	_commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
+	D3D12_VERTEX_BUFFER_VIEW vbViews[2] = { _vertexBufferView, _instancingBufferView };
+	_commandList->IASetVertexBuffers(0, 2, vbViews);
 
 	// 描画処理
-	_commandList->DrawInstanced(3, 1, 0, 0);
+	_commandList->DrawInstanced(3, INSTANCING_NUM, 0, 0);
 
 	// 描画終了処理
 	_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_renderTargets[backBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -427,10 +429,7 @@ bool App::CreateResource()
 		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 });
 		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT,0,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0 });
 		//_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "TEXCORD",  0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 });
-		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "MATRIX", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 });
-		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "MATRIX", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 });
-		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "MATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 });
-		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "MATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 });
+		_inputLayoutDescs.push_back(D3D12_INPUT_ELEMENT_DESC{ "INSTANCE_OFFSET", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 });
 	}
 
 	// シェーダの読み込み
@@ -454,6 +453,12 @@ bool App::CreateResource()
 
 	// 頂点バッファの作成
 	if (!CreateVertexBuffer())
+	{
+		return false;
+	}
+
+	// インスタンシングバッファの作成
+	if (!CreateInstancingBuffer())
 	{
 		return false;
 	}
@@ -561,7 +566,7 @@ bool App::CreateFence()
 
 bool App::CreateVertexBuffer()
 {
-	_dev->CreateCommittedResource(
+	auto result = _dev->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
 		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices)),
@@ -569,6 +574,11 @@ bool App::CreateVertexBuffer()
 		nullptr,
 		IID_PPV_ARGS(_vertexBuffer.GetAddressOf()));
 
+	if (FAILED(result))
+	{
+		MessageBox(nullptr, TEXT("Failed Create VertexBuffer."), TEXT("Failed"), MB_OK);
+		return false;
+	}
 	char *buf;
 
 	_vertexBuffer->Map(0, nullptr, (void**)&buf);
@@ -584,18 +594,39 @@ bool App::CreateVertexBuffer()
 
 bool App::CreateInstancingBuffer()
 {
-	_dev->CreateCommittedResource
+	auto result = _dev->CreateCommittedResource
 	(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(DirectX::XMMATRIX)*INSTANCING_NUM),
+		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(DirectX::XMFLOAT3)*INSTANCING_NUM),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(_instancingBuffer.GetAddressOf()));
-	char *buf;
+	
+	if (FAILED(result))
+	{
+		MessageBox(nullptr, TEXT("Failed InstancingBuffer."), TEXT("Failed"), MB_OK);
+		return false;
+	}
 
+	DirectX::XMFLOAT3 *buf;
 	_instancingBuffer->Map(0, nullptr, (void**)&buf);
+	for (int i = 0; i < INSTANCING_NUM; ++i)
+	{
+		float x = (float)rand() / (float)RAND_MAX;
+		float y = (float)rand() / (float)RAND_MAX;
+		x = x * 2 - 1.0f;
+		y = y * 2 - 1.0f;
+		
+
+		DirectX::XMFLOAT3 pos(x, y, 0.0f);
+		*buf = pos;
+		++buf;
+	}
 	_instancingBuffer->Unmap(0, nullptr);
 
+	_instancingBufferView.BufferLocation = _instancingBuffer->GetGPUVirtualAddress();
+	_instancingBufferView.StrideInBytes = sizeof(DirectX::XMFLOAT3);
+	_instancingBufferView.SizeInBytes = sizeof(DirectX::XMFLOAT3)*INSTANCING_NUM;
 	return true;
 }

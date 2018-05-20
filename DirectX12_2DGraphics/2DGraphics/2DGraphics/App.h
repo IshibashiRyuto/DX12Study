@@ -78,9 +78,10 @@ private:
 	ComPtr<ID3D12Resource> _vertexBuffer;							// 頂点バッファ
 	D3D12_VERTEX_BUFFER_VIEW _vertexBufferView;						// 頂点バッファビュー
 	ComPtr<ID3D12Resource> _instancingBuffer;						// インスタンシング用のバッファ
+	D3D12_VERTEX_BUFFER_VIEW _instancingBufferView;					// インスタンシングバッファビュー
 
-	Vertex vertices[3] = { {{0.0f,0.0f,0.0f}, {0.0f,0.0f,-1.0f}},
-	{{0.1f,0.0f, 5.0f}, { 0.0f,0.0f,-1.0f } },
+	Vertex vertices[4] = { {{0.0f,0.0f,0.0f}, {0.0f,0.0f,-1.0f}},
+	{{0.1f,0.0f, 0.0f}, { 0.0f,0.0f,-1.0f } },
 	{{0.0f,-0.1f,0.0f},{ 0.0f,0.0f,-1.0f } } };											// 頂点情報(仮)
 
 	/// @fn	CreateDevice
