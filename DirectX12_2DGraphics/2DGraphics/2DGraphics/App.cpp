@@ -1,5 +1,6 @@
 #include "App.h"
 #include <math.h>
+#include <time.h>
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -705,6 +706,8 @@ bool App::CreateInstancingBuffer()
 		MessageBox(nullptr, TEXT("Failed Map by constantBuffer."), TEXT("Failed"), MB_OK);
 		return false;
 	}
+
+	srand((unsigned int)time(NULL));
 
 	for (int i = 0; i < INSTANCING_NUM; ++i)
 	{
