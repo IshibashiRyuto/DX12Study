@@ -83,6 +83,9 @@ private:
 	ComPtr<ID3D12Resource> _instancingConstantBuffer;				// インスタンシング用のコンスタントバッファ
 	ComPtr<ID3D12DescriptorHeap> _icbDescHeap;						// インスタンシング用コンスタントバッファのデスクリプタヒープ
 
+	// テクスチャリソース
+	ComPtr<ID3D12Resource> _textureBuffer;							// テクスチャバッファ
+
 
 	Vertex vertices[4] = { {{0.0f,0.0f,0.0f}, {0.0f,0.0f,-1.0f},{0.0f,0.0f} },
 	{{0.1f,0.0f, 0.0f}, { 0.0f,0.0f,-1.0f }, {1.0f,0.0f} },
@@ -181,4 +184,10 @@ private:
 	/// @retval bool 処理が成功したか
 	/// true:成功 false:失敗
 	bool CreateInstancingBuffer();
+
+	/// @fn CreateTextureBuffer
+	/// テクスチャバッファを作成する
+	/// @retval bool 処理が成功したか
+	/// true:成功 false:失敗
+	bool CreateTextureBuffer();
 };

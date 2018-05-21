@@ -1,6 +1,7 @@
 #include "App.h"
 #include <math.h>
 #include <time.h>
+#include <random>
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -164,8 +165,6 @@ void App::Render()
 	D3D12_VERTEX_BUFFER_VIEW vbViews[2] = { _vertexBufferView, _instancingBufferView };
 	_commandList->IASetVertexBuffers(0, 2, vbViews);
 	
-
-	//_commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
 
 	// CBV
 	_commandList->SetDescriptorHeaps(1, _icbDescHeap.GetAddressOf());
@@ -640,7 +639,7 @@ bool App::CreateInstancingBuffer()
 
 	unsigned  *buf;
 	_instancingBuffer->Map(0, nullptr, (void**)&buf);
-	for (unsigned int i = 0; i < INSTANCING_NUM; ++i)
+	for (unsigned int i = 0; i < (unsigned int)INSTANCING_NUM; ++i)
 	{
 		*buf = i;
 		++buf;
@@ -691,13 +690,13 @@ bool App::CreateInstancingBuffer()
 	D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle = {};
 
 	cbvDesc.BufferLocation = _instancingConstantBuffer->GetGPUVirtualAddress();
-	cbvDesc.SizeInBytes = (sizeof(DirectX::XMFLOAT3) * INSTANCING_NUM + 0xff)&~0xff;
+	cbvDesc.SizeInBytes = (sizeof(DirectX::XMFLOAT4) * INSTANCING_NUM + 0xff)&~0xff;
 
 	cbvHandle = _icbDescHeap->GetCPUDescriptorHandleForHeapStart();
 	
 	_dev->CreateConstantBufferView(&cbvDesc, cbvHandle);
 
-	DirectX::XMFLOAT3 *cBuf = nullptr;
+	DirectX::XMFLOAT4 *cBuf = nullptr;
 	D3D12_RANGE range = {};
 	result = _instancingConstantBuffer->Map(0, &range, (void**)(&cBuf));
 
@@ -707,20 +706,43 @@ bool App::CreateInstancingBuffer()
 		return false;
 	}
 
-	srand((unsigned int)time(NULL));
+	std::random_device seed_gen;
+	std::mt19937 engine(seed_gen());
+	std::uniform_real_distribution<float> point(-1.0f, 1.0f);
 
 	for (int i = 0; i < INSTANCING_NUM; ++i)
 	{
-		float x = (float)rand() / (float)RAND_MAX;
-		float y = (float)rand() / (float)RAND_MAX;
-		x = x * 2 - 1.0f;
-		y = y * 2 - 1.0f;
+		float x, y;
 
-
-		DirectX::XMFLOAT3 pos(x, y, 0.0f);
+		x = point(engine);
+		y = point(engine);
+		DirectX::XMFLOAT4 pos(x, y, 0.0f,0.0f);
 		*cBuf = pos;
 		++cBuf;
 	}
 
+	return true;
+}
+
+bool App::CreateTextureBuffer()
+{
+	HRESULT result;
+
+	D3D12_RESOURCE_DESC texResourceDesc = {};
+	texResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	texResourceDesc.Width = 256;	// Œˆ‚ß‘Å‚¿
+	texResourceDesc.Height = 256;	// Œˆ‚ß‘Å‚¿
+	texResourceDesc.DepthOrArraySize = 1;
+	texResourceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texResourceDesc.SampleDesc.Count = 1;
+	texResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	texResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	
+
+	if (FAILED(result))
+	{
+		MessageBox(nullptr, TEXT("Failed Create Texture Buffer."), TEXT("Failed"), MB_OK);
+		return false;
+	}
 	return true;
 }
