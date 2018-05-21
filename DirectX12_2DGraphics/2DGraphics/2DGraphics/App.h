@@ -41,7 +41,7 @@ public:
 	void Render();
 
 private:
-	const int INSTANCING_NUM = 100;			// オブジェクトのインスタンシング数
+	const int INSTANCING_NUM = 4096;			// オブジェクトのインスタンシング数
 
 	HWND _hwnd;														// ウィンドウハンドル
 
@@ -190,4 +190,11 @@ private:
 	/// @retval bool 処理が成功したか
 	/// true:成功 false:失敗
 	bool CreateTextureBuffer();
+
+
+	/// @fn LoadBitmapData
+	/// ビットマップデータのロード
+	/// @retval bool 処理が成功したか
+	/// true: 成功, false: 失敗
+	bool LoadBitmapData();
 };

@@ -490,6 +490,12 @@ bool App::CreateResource()
 		return false;
 	}
 
+	// テクスチャの読み込み
+	if (!CreateTextureBuffer())
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -672,20 +678,27 @@ bool App::CreateInstancingBuffer()
 
 	D3D12_RESOURCE_DESC resourceDesc = {};
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resourceDesc.Width = (sizeof(DirectX::XMFLOAT3) * INSTANCING_NUM + 0xff)&~0xff;		//256byteAllinment
+	resourceDesc.Width = (sizeof(DirectX::XMFLOAT4) * INSTANCING_NUM + 0xff)&~0xff;		//256byteAllinment
 	resourceDesc.Height = 1;
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.MipLevels = 1;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	_dev->CreateCommittedResource(&heapProp,
+
+	result = _dev->CreateCommittedResource(&heapProp,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(_instancingConstantBuffer.GetAddressOf()) );
-	
+
+	if (FAILED(result))
+	{
+		MessageBox(nullptr, TEXT("Failed Create ConstantBuffer."), TEXT("Failed"), MB_OK);
+		return false;
+	}
+
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle = {};
 
@@ -695,6 +708,7 @@ bool App::CreateInstancingBuffer()
 	cbvHandle = _icbDescHeap->GetCPUDescriptorHandleForHeapStart();
 	
 	_dev->CreateConstantBufferView(&cbvDesc, cbvHandle);
+	
 
 	DirectX::XMFLOAT4 *cBuf = nullptr;
 	D3D12_RANGE range = {};
@@ -702,6 +716,7 @@ bool App::CreateInstancingBuffer()
 
 	if (FAILED(result))
 	{
+		auto reason = _dev->GetDeviceRemovedReason();
 		MessageBox(nullptr, TEXT("Failed Map by constantBuffer."), TEXT("Failed"), MB_OK);
 		return false;
 	}
@@ -726,7 +741,7 @@ bool App::CreateInstancingBuffer()
 
 bool App::CreateTextureBuffer()
 {
-	HRESULT result;
+	HRESULT result = {};
 
 	D3D12_RESOURCE_DESC texResourceDesc = {};
 	texResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -738,11 +753,31 @@ bool App::CreateTextureBuffer()
 	texResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 	texResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	
+	D3D12_HEAP_PROPERTIES hprop = {};
+	hprop.Type = D3D12_HEAP_TYPE_CUSTOM;
+	hprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+	hprop.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+	hprop.CreationNodeMask = 1;
+	hprop.VisibleNodeMask = 1;
+
+	result = _dev->CreateCommittedResource(&hprop,
+		D3D12_HEAP_FLAG_NONE,
+		&texResourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, IID_PPV_ARGS(_textureBuffer.GetAddressOf()));
 
 	if (FAILED(result))
 	{
 		MessageBox(nullptr, TEXT("Failed Create Texture Buffer."), TEXT("Failed"), MB_OK);
 		return false;
 	}
+
+	return true;
+}
+
+bool App::LoadBitmapData()
+{
+	BITMAPFILEHEADER bitmapFileHeader;
+	BITMAPINFOHEADER bitmapInfoHeader;
 	return true;
 }
