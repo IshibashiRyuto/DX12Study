@@ -157,26 +157,14 @@ void App::Render()
 	// 描画初期化処理
 	_commandList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
 	_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, _depthClearValue.DepthStencil.Depth, 0, 0, nullptr);
-	_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-
-	// データセット
-
-	//	VertexBufferを用いたインスタンシング
-	
-	D3D12_VERTEX_BUFFER_VIEW vbViews[2] = { _vertexBufferView, _instancingBufferView };
-	_commandList->IASetVertexBuffers(0, 2, vbViews);
+	//_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	// CBV
 	_commandList->SetDescriptorHeaps(1, _icbDescHeap.GetAddressOf());
 	_commandList->SetGraphicsRootDescriptorTable(0, _icbDescHeap->GetGPUDescriptorHandleForHeapStart());
 
-	//SRV
-	/*
-	_commandList->SetDescriptorHeaps(1, _srvDescriptorHeap.GetAddressOf());
-	_commandList->SetGraphicsRootDescriptorTable(1, _srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	*/
-	// 描画処理
-	_commandList->DrawInstanced(4, INSTANCING_NUM, 0, 0);
+	// バンドルの実行
+	_commandList->ExecuteBundle(_bundle.Get());
 
 	// 描画終了処理
 	_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_renderTargets[backBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -515,6 +503,12 @@ bool App::CreateResource()
 		return false;
 	}
 
+	// バンドルの作成
+	if (!CreateBundle())
+	{
+		return false;
+	}
+
 
 	// 頂点バッファの作成
 	if (!CreateVertexBuffer())
@@ -544,6 +538,10 @@ bool App::CreateResource()
 	{
 		return false;
 	}
+
+
+	// バンドルへ描画コマンドを流し込む
+	SetBundle();
 	return true;
 }
 
@@ -632,6 +630,51 @@ bool App::CreateCommandList()
 		return false;
 	}
 	return true;
+}
+
+bool App::CreateBundle()
+{
+	HRESULT result = S_OK;
+
+	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_BUNDLE, IID_PPV_ARGS(_bundleAllocator.GetAddressOf()));
+	if (result != S_OK)
+	{
+		MessageBox(nullptr, TEXT("Failed Create BundleAllocator."), TEXT("Failed"), MB_OK);
+		return false;
+	}
+	_bundleAllocator->Reset();
+	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_BUNDLE, _bundleAllocator.Get(), _pipelineStateObject.Get(), IID_PPV_ARGS(_bundle.GetAddressOf()));
+	if (result != S_OK)
+	{
+		MessageBox(nullptr, TEXT("Failed Create Bundle."), TEXT("Failed"), MB_OK);
+		return false;
+	}
+
+	_bundle->Close();
+	return true;
+}
+
+void App::SetBundle()
+{
+	// 初期化
+	_bundle->Reset(_bundleAllocator.Get(), _pipelineStateObject.Get());
+	_bundle->SetGraphicsRootSignature(_rootSignature.Get());
+
+	//とぽろじせっと
+	_bundle->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	// データセット
+
+	//	VertexBufferを用いたインスタンシング
+
+	D3D12_VERTEX_BUFFER_VIEW vbViews[2] = { _vertexBufferView, _instancingBufferView };
+	_bundle->IASetVertexBuffers(0, 2, vbViews);
+
+
+	// 描画処理
+	_bundle->DrawInstanced(4, INSTANCING_NUM, 0, 0);
+
+	// バンドルのクローズ
+	_bundle->Close();
 }
 
 bool App::CreateFence()

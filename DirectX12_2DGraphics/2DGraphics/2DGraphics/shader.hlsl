@@ -3,7 +3,7 @@ SamplerState smp : register(s0);
 
 cbuffer mat : register(b0)
 {
-	float4 offset[100];
+	float4 offset[4096];
 }
 
 struct VS_IN

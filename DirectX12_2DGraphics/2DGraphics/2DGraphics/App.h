@@ -83,6 +83,9 @@ private:
 	ComPtr<ID3D12Resource> _instancingConstantBuffer;				// インスタンシング用のコンスタントバッファ
 	ComPtr<ID3D12DescriptorHeap> _icbDescHeap;						// インスタンシング用コンスタントバッファのデスクリプタヒープ
 
+	ComPtr<ID3D12GraphicsCommandList> _bundle;								// バンドル
+	ComPtr<ID3D12CommandAllocator> _bundleAllocator;				// バンドル用のアロケータ
+
 	// テクスチャリソース
 	ComPtr<ID3D12Resource> _textureBuffer;							// テクスチャバッファ
 	ComPtr<ID3D12DescriptorHeap> _srvDescriptorHeap;					// シェーダリソースビュー用のデスクリプタヒープ
@@ -167,6 +170,17 @@ private:
 	/// true:成功 false:失敗
 	bool CreateCommandList();
 
+	/// @fn CreateBundle
+	/// バンドルを作成する
+	/// @retval bool 処理が成功したか
+	/// true:成功 false:失敗
+	bool CreateBundle();
+
+	/// @fn SetBundle
+	/// バンドルにコマンドを積む
+	void SetBundle();
+	
+
 	/// @fn CreateFence
 	/// フェンスを生成する
 	/// @retval bool 処理が成功したか
@@ -204,6 +218,5 @@ private:
 	/// @retval bool 処理が成功したか
 	/// true: 成功, false: 失敗
 	bool CreateShaderResourceView();
-
 
 };

@@ -771,10 +771,10 @@ void Dx12Device::Render()
 
 	
 	// SRVディスクリプタヒープの設定
-	_commandList->SetDescriptorHeaps(1, (&_srvDescriptorHeap));
+	//_commandList->SetDescriptorHeaps(1, (&_srvDescriptorHeap));
 
 	// SRVディスクリプタテーブルの設定
-	_commandList->SetGraphicsRootDescriptorTable(0, _srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	//_commandList->SetGraphicsRootDescriptorTable(0, _srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
 	// CBVディスクリプタヒープの設定
 	_commandList->SetDescriptorHeaps(1, &_cbvDescriptorHeap);
