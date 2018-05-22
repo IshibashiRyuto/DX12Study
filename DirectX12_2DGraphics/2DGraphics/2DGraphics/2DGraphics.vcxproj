@@ -143,12 +143,14 @@
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="CommandList.cpp" />
+    <ClCompile Include="Device.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="UserErr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="CommandList.h" />
+    <ClInclude Include="Device.h" />
     <ClInclude Include="UserErr.h" />
   </ItemGroup>
   <ItemGroup>
