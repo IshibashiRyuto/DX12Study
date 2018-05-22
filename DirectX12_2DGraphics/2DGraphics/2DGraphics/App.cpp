@@ -116,17 +116,18 @@ bool App::Initialize(HWND hWnd)
 		return false;
 	}
 
+	// フェンスの作成
+	if (!CreateFence())
+	{
+		return false;
+	}
+
 	// リソースの作成
 	if (!CreateResource())
 	{
 		return false;
 	}
 
-	// フェンスの作成
-	if (!CreateFence())
-	{
-		return false;
-	}
 
 	return true;
 }
@@ -402,7 +403,24 @@ bool App::CreateRootSignature()
 	ID3DBlob* signature = nullptr;					// シグネチャ
 	ID3DBlob* error = nullptr;
 
-	std::vector<D3D12_ROOT_PARAMETER> rootParam;
+	// サンプラ
+	{
+		_samplerDesc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+		_samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		_samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		_samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		_samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+		_samplerDesc.MinLOD = 0.0f;
+		_samplerDesc.MipLODBias = 0.0f;
+		_samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+		_samplerDesc.ShaderRegister = 0;
+		_samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		_samplerDesc.RegisterSpace = 0;
+		_samplerDesc.MaxAnisotropy = 0;
+		_samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	}
+
+	std::vector<D3D12_ROOT_PARAMETER> rootParam;	// ルートパラメータ
 
 	// CBV用ディスクリプタレンジの設定
 	D3D12_DESCRIPTOR_RANGE range;
@@ -412,14 +430,30 @@ bool App::CreateRootSignature()
 	range.RegisterSpace = 0;
 	range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+	// SRV用ディスクリプタレンジの設定
+	D3D12_DESCRIPTOR_RANGE descriptorRangeSRV;
+	descriptorRangeSRV.NumDescriptors = 1;
+	descriptorRangeSRV.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorRangeSRV.BaseShaderRegister = 0;
+	descriptorRangeSRV.RegisterSpace = 0;
+	descriptorRangeSRV.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 	// CBV用ルートパラメータの設定
 	D3D12_ROOT_PARAMETER prm;
 	prm.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	prm.DescriptorTable = { 1,&range };
 	prm.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-	rootParam.resize(1);
+	// SRV用ルートパラメータの設定
+	D3D12_ROOT_PARAMETER prmSRV;
+	prmSRV.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	prmSRV.DescriptorTable = { 1,&descriptorRangeSRV };
+	prmSRV.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+
+	rootParam.resize(2);
 	rootParam[0] = prm;
+	rootParam[1] = prmSRV;
 
 	// ルートシグネチャの設定
 	CD3DX12_ROOT_SIGNATURE_DESC rsd = {};
@@ -804,12 +838,49 @@ bool App::LoadBitmapData()
 	D3D12_BOX box{ 0,0,1,256,256,0 };
 	_textureBuffer->WriteToSubresource(0, &box, &data[0], 256 * sizeof(char), sizeof(char)*bitmapInfoHeader.biSizeImage);
 
+	_commandAllocator->Reset();
+	_commandList->Reset(_commandAllocator.Get(), _pipelineStateObject.Get());
+	_commandList->SetGraphicsRootSignature(_rootSignature.Get());
+
 	_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_textureBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 	_commandList->Close();
-	_commandQueue->ExecuteCommandLists(1,(ID3D12CommandList* const*)_commandList.Get());
+
+	ID3D12CommandList* commandLists[] = { _commandList.Get() };
+	_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 
 	_commandQueue->Signal(_fence.Get(), ++_fenceValue);
 	while (_fence->GetCompletedValue() != _fenceValue);
+	return true;
+}
+
+bool App::CreateShaderResourceView()
+{
+	D3D12_DESCRIPTOR_HEAP_DESC desc{};
+	desc.NumDescriptors = 1;
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	auto result = _dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(_srvDescriptorHeap.GetAddressOf()));
+
+	if (FAILED(result))
+	{
+		MessageBox(nullptr, TEXT("Failed Create ShaderResourceView."), TEXT("Failed"), MB_OK);
+		return false;
+	}
+
+
+	unsigned int stride = _dev->GetDescriptorHandleIncrementSize(desc.Type);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{};
+
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	srvHandle = _srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	_dev->CreateShaderResourceView(_textureBuffer.Get(), &srvDesc, srvHandle);
+
 	return true;
 }

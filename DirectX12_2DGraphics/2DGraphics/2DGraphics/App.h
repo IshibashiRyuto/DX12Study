@@ -85,6 +85,7 @@ private:
 
 	// テクスチャリソース
 	ComPtr<ID3D12Resource> _textureBuffer;							// テクスチャバッファ
+	ComPtr<ID3D12DescriptorHeap> _srvDescriptorHeap;					// シェーダリソースビュー用のデスクリプタヒープ
 
 
 	Vertex vertices[4] = { {{0.0f,0.0f,0.0f}, {0.0f,0.0f,-1.0f},{0.0f,0.0f} },
@@ -197,4 +198,12 @@ private:
 	/// @retval bool 処理が成功したか
 	/// true: 成功, false: 失敗
 	bool LoadBitmapData();
+
+	/// @fn CreateSharderResourceView
+	/// シェーダリソースビューの作成
+	/// @retval bool 処理が成功したか
+	/// true: 成功, false: 失敗
+	bool CreateShaderResourceView();
+
+
 };
