@@ -165,12 +165,16 @@ void App::Render()
 	
 	D3D12_VERTEX_BUFFER_VIEW vbViews[2] = { _vertexBufferView, _instancingBufferView };
 	_commandList->IASetVertexBuffers(0, 2, vbViews);
-	
 
 	// CBV
 	_commandList->SetDescriptorHeaps(1, _icbDescHeap.GetAddressOf());
 	_commandList->SetGraphicsRootDescriptorTable(0, _icbDescHeap->GetGPUDescriptorHandleForHeapStart());
 
+	//SRV
+	/*
+	_commandList->SetDescriptorHeaps(1, _srvDescriptorHeap.GetAddressOf());
+	_commandList->SetGraphicsRootDescriptorTable(1, _srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	*/
 	// 描画処理
 	_commandList->DrawInstanced(4, INSTANCING_NUM, 0, 0);
 
@@ -523,7 +527,6 @@ bool App::CreateResource()
 	{
 		return false;
 	}
-
 	// テクスチャバッファの作成
 	if (!CreateTextureBuffer())
 	{
@@ -532,6 +535,12 @@ bool App::CreateResource()
 
 	// テクスチャデータの読み込み
 	if (!LoadBitmapData())
+	{
+		return false;
+	}
+
+	// シェーダリソースビューの作成
+	if (!CreateShaderResourceView())
 	{
 		return false;
 	}
