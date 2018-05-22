@@ -490,12 +490,17 @@ bool App::CreateResource()
 		return false;
 	}
 
-	// テクスチャの読み込み
+	// テクスチャバッファの作成
 	if (!CreateTextureBuffer())
 	{
 		return false;
 	}
 
+	// テクスチャデータの読み込み
+	if (!LoadBitmapData())
+	{
+		return false;
+	}
 	return true;
 }
 
@@ -777,7 +782,34 @@ bool App::CreateTextureBuffer()
 
 bool App::LoadBitmapData()
 {
-	BITMAPFILEHEADER bitmapFileHeader;
-	BITMAPINFOHEADER bitmapInfoHeader;
+	BITMAPFILEHEADER bitmapFileHeader = {};
+	BITMAPINFOHEADER bitmapInfoHeader = {};
+	FILE *fp;
+	
+	auto err = fopen_s(&fp, "texturesample.bmp", "rb");
+
+	if (err != 0)
+	{
+		MessageBox(nullptr, TEXT("Failed Open Bitmap File."), TEXT("Failed"), MB_OK);
+		return false;
+	}
+
+	fread(&bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, fp);
+	fread(&bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, fp);
+
+	std::vector<char> data;
+	data.resize(bitmapInfoHeader.biSizeImage);
+	fread(&data[0], sizeof(char)*bitmapInfoHeader.biSizeImage, 1, fp);
+	fclose(fp);
+	D3D12_BOX box{ 0,0,1,256,256,0 };
+	_textureBuffer->WriteToSubresource(0, &box, &data[0], 256 * sizeof(char), sizeof(char)*bitmapInfoHeader.biSizeImage);
+
+	_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_textureBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	_commandList->Close();
+	_commandQueue->ExecuteCommandLists(1,(ID3D12CommandList* const*)_commandList.Get());
+
+	_commandQueue->Signal(_fence.Get(), ++_fenceValue);
+	while (_fence->GetCompletedValue() != _fenceValue);
 	return true;
 }
