@@ -32,7 +32,6 @@ bool App::Initialize(HWND hWnd)
 			return false;
 		}
 	}
-
 #ifdef _DEBUG
 	{
 		// デバッグレイヤーの有効化
@@ -135,7 +134,7 @@ bool App::Initialize(HWND hWnd)
 void App::Render()
 {
 	// コマンドリストの初期化処理
-	_commandAllocator->Reset();
+	_commandAllocator.Get()->Reset();
 	_commandList->Reset(_commandAllocator.Get(), _pipelineStateObject.Get());
 	_commandList->SetGraphicsRootSignature(_rootSignature.Get());
 
@@ -189,44 +188,12 @@ void App::Render()
 
 bool App::CreateDevice()
 {
-	HRESULT result;
-	D3D_FEATURE_LEVEL levels[] = {
-		D3D_FEATURE_LEVEL_12_1,
-		D3D_FEATURE_LEVEL_12_0,
-		D3D_FEATURE_LEVEL_11_1,
-		D3D_FEATURE_LEVEL_11_0,
-	};	// フィーチャレベル配列
-
-	for (auto l : levels)
-	{
-		result = D3D12CreateDevice(nullptr, l, IID_PPV_ARGS(&_dev));
-		if (result == S_OK)	// 最新のフィーチャーレベルでデバイスを生成出来たら
-		{
-			// レベルを保存してループを脱出
-			_level = l;
-			break;
-		}
-	}
-
-	if (result != S_OK)
-	{
-		MessageBox(nullptr, TEXT("Failed Create Device."), TEXT("Failed"), MB_OK);
-		return false;
-	}
-
-	return true;
+	return _device.Create();
 }
 
 bool App::CreateCommandAllocator()
 {
-	HRESULT result;
-	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&_commandAllocator));
-	if (result != S_OK)
-	{
-		MessageBox(nullptr, TEXT("Failed Create CommandAllocator."), TEXT("Failed"), MB_OK);
-		return false;
-	}
-	return true;
+	return _commandAllocator.Create(_device.Get(), D3D12_COMMAND_LIST_TYPE_DIRECT);
 }
 
 bool App::CreateCommandQueue()
@@ -237,7 +204,7 @@ bool App::CreateCommandQueue()
 	desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-	auto result = _dev->CreateCommandQueue(&desc, IID_PPV_ARGS(&_commandQueue));
+	auto result = _device.Get()->CreateCommandQueue(&desc, IID_PPV_ARGS(&_commandQueue));
 	if (result != S_OK)
 	{
 		MessageBox(nullptr, TEXT("Failed Create CommandQueue."), TEXT("Failed"), MB_OK);
@@ -289,7 +256,7 @@ bool App::CreateRenderTargetView()
 
 		//rtvディスクリプタヒープ生成
 
-		auto result = _dev->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&_rtvDescriptorHeap));
+		auto result = _device.Get()->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&_rtvDescriptorHeap));
 		if (FAILED(result))
 		{
 			MessageBox(nullptr, TEXT("Failed Create RTV Descriptor Heap."), TEXT("Failed"), MB_OK);
@@ -298,7 +265,7 @@ bool App::CreateRenderTargetView()
 
 		// rtvディスクリプタヒープのサイズを取得
 		UINT descriptorHeapSize = 0;
-		descriptorHeapSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		descriptorHeapSize = _device.Get()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 
 		//レンダーターゲットビューの生成
@@ -312,7 +279,7 @@ bool App::CreateRenderTargetView()
 		_renderTargets.resize(renderTargetsNum);
 
 		// ディスクリプタ一つ当たりのサイズを取得
-		_rtvDescriptorSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		_rtvDescriptorSize = _device.Get()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		{
 			// ディスクリプタハンドルの作成
 			CD3DX12_CPU_DESCRIPTOR_HANDLE descriptorHandle(_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -325,7 +292,7 @@ bool App::CreateRenderTargetView()
 					MessageBox(nullptr, TEXT("Failed Create RTV."), TEXT("Failed"), MB_OK);
 					return false;
 				}
-				_dev->CreateRenderTargetView(_renderTargets[i].Get(), nullptr, descriptorHandle);
+				_device.Get()->CreateRenderTargetView(_renderTargets[i].Get(), nullptr, descriptorHandle);
 				descriptorHandle.Offset(1, _rtvDescriptorSize);//ディスクリプタとキャンバス分オフセット
 			}
 		}
@@ -352,7 +319,7 @@ bool App::CreateDepthBuffer()
 	_depthClearValue.DepthStencil.Depth = 1.0f;		// 深さ最大値
 	_depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
 
-	auto result = _dev->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+	auto result = _device.Get()->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
 		&depthResDesc,
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
@@ -376,7 +343,7 @@ bool App::CreateDepthStencilView()
 	dsvHeapDesc.NumDescriptors = 1;
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 
-	auto result = _dev->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&_dsvDescriptorHeap));
+	auto result = _device.Get()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&_dsvDescriptorHeap));
 
 	if (FAILED(result))
 	{
@@ -386,7 +353,7 @@ bool App::CreateDepthStencilView()
 
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	_dev->CreateDepthStencilView(_depthBuffer.Get(), &dsvDesc, _dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	_device.Get()->CreateDepthStencilView(_depthBuffer.Get(), &dsvDesc, _dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	return true;
 }
 
@@ -465,7 +432,7 @@ bool App::CreateRootSignature()
 	}
 
 	// シグネチャの情報を参照してルートシグネチャを生成
-	result = _dev->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(_rootSignature.GetAddressOf()));
+	result = _device.Get()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(_rootSignature.GetAddressOf()));
 	if (result != S_OK)
 	{
 		MessageBox(nullptr, TEXT("Failed Create RootSignature."), TEXT("Failed"), MB_OK);
@@ -604,7 +571,7 @@ bool App::CreatePipelineStateObject()
 	gpsDesc.SampleDesc.Count = 1;
 	gpsDesc.SampleMask = UINT_MAX;
 
-	auto result = _dev->CreateGraphicsPipelineState(&gpsDesc, IID_PPV_ARGS(_pipelineStateObject.GetAddressOf()));
+	auto result = _device.Get()->CreateGraphicsPipelineState(&gpsDesc, IID_PPV_ARGS(_pipelineStateObject.GetAddressOf()));
 
 	if (FAILED(result))
 	{
@@ -616,7 +583,7 @@ bool App::CreatePipelineStateObject()
 
 bool App::CreateCommandList()
 {
-	auto result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _commandAllocator.Get(), _pipelineStateObject.Get(), IID_PPV_ARGS(_commandList.GetAddressOf()));
+	auto result = _device.Get()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _commandAllocator.Get(), _pipelineStateObject.Get(), IID_PPV_ARGS(_commandList.GetAddressOf()));
 	if (result != S_OK)
 	{
 		MessageBox(nullptr, TEXT("Failed Create CommandLine."), TEXT("Failed"), MB_OK);
@@ -636,14 +603,14 @@ bool App::CreateBundle()
 {
 	HRESULT result = S_OK;
 
-	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_BUNDLE, IID_PPV_ARGS(_bundleAllocator.GetAddressOf()));
-	if (result != S_OK)
+	bool isCreate = _bundleAllocator.Create(_device.Get(), D3D12_COMMAND_LIST_TYPE_BUNDLE);
+	if (!isCreate)
 	{
 		MessageBox(nullptr, TEXT("Failed Create BundleAllocator."), TEXT("Failed"), MB_OK);
 		return false;
 	}
-	_bundleAllocator->Reset();
-	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_BUNDLE, _bundleAllocator.Get(), _pipelineStateObject.Get(), IID_PPV_ARGS(_bundle.GetAddressOf()));
+	_bundleAllocator.Get()->Reset();
+	result = _device.Get()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_BUNDLE, _bundleAllocator.Get(), _pipelineStateObject.Get(), IID_PPV_ARGS(_bundle.GetAddressOf()));
 	if (result != S_OK)
 	{
 		MessageBox(nullptr, TEXT("Failed Create Bundle."), TEXT("Failed"), MB_OK);
@@ -679,7 +646,7 @@ void App::SetBundle()
 
 bool App::CreateFence()
 {
-	auto result = _dev->CreateFence(_fenceValue, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence.GetAddressOf()));
+	auto result = _device.Get()->CreateFence(_fenceValue, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence.GetAddressOf()));
 	if (FAILED(result))
 	{
 		MessageBox(nullptr, TEXT("Failed Create Fence."), TEXT("Failed"), MB_OK);
@@ -690,7 +657,7 @@ bool App::CreateFence()
 
 bool App::CreateVertexBuffer()
 {
-	auto result = _dev->CreateCommittedResource(
+	auto result = _device.Get()->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
 		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices)),
@@ -719,7 +686,7 @@ bool App::CreateVertexBuffer()
 bool App::CreateInstancingBuffer()
 {
 	//vertexBuffer版
-	auto result = _dev->CreateCommittedResource
+	auto result = _device.Get()->CreateCommittedResource
 	(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
@@ -752,7 +719,7 @@ bool App::CreateInstancingBuffer()
 	desc.NumDescriptors = 1;
 	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	result = _dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(_icbDescHeap.GetAddressOf()));
+	result = _device.Get()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(_icbDescHeap.GetAddressOf()));
 
 	if (FAILED(result))
 	{
@@ -777,7 +744,7 @@ bool App::CreateInstancingBuffer()
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 
-	result = _dev->CreateCommittedResource(&heapProp,
+	result = _device.Get()->CreateCommittedResource(&heapProp,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -798,7 +765,7 @@ bool App::CreateInstancingBuffer()
 
 	cbvHandle = _icbDescHeap->GetCPUDescriptorHandleForHeapStart();
 	
-	_dev->CreateConstantBufferView(&cbvDesc, cbvHandle);
+	_device.Get()->CreateConstantBufferView(&cbvDesc, cbvHandle);
 	
 
 	DirectX::XMFLOAT4 *cBuf = nullptr;
@@ -807,7 +774,7 @@ bool App::CreateInstancingBuffer()
 
 	if (FAILED(result))
 	{
-		auto reason = _dev->GetDeviceRemovedReason();
+		auto reason = _device.Get()->GetDeviceRemovedReason();
 		MessageBox(nullptr, TEXT("Failed Map by constantBuffer."), TEXT("Failed"), MB_OK);
 		return false;
 	}
@@ -851,7 +818,7 @@ bool App::CreateTextureBuffer()
 	hprop.CreationNodeMask = 1;
 	hprop.VisibleNodeMask = 1;
 
-	result = _dev->CreateCommittedResource(&hprop,
+	result = _device.Get()->CreateCommittedResource(&hprop,
 		D3D12_HEAP_FLAG_NONE,
 		&texResourceDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -890,7 +857,7 @@ bool App::LoadBitmapData()
 	D3D12_BOX box{ 0,0,1,256,256,0 };
 	_textureBuffer->WriteToSubresource(0, &box, &data[0], 256 * sizeof(char), sizeof(char)*bitmapInfoHeader.biSizeImage);
 
-	_commandAllocator->Reset();
+	_commandAllocator.Get()->Reset();
 	_commandList->Reset(_commandAllocator.Get(), _pipelineStateObject.Get());
 	_commandList->SetGraphicsRootSignature(_rootSignature.Get());
 
@@ -913,7 +880,7 @@ bool App::CreateShaderResourceView()
 	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-	auto result = _dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(_srvDescriptorHeap.GetAddressOf()));
+	auto result = _device.Get()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(_srvDescriptorHeap.GetAddressOf()));
 
 	if (FAILED(result))
 	{
@@ -922,7 +889,7 @@ bool App::CreateShaderResourceView()
 	}
 
 
-	unsigned int stride = _dev->GetDescriptorHandleIncrementSize(desc.Type);
+	unsigned int stride = _device.Get()->GetDescriptorHandleIncrementSize(desc.Type);
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{};
 
@@ -932,7 +899,7 @@ bool App::CreateShaderResourceView()
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 	srvHandle = _srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	_dev->CreateShaderResourceView(_textureBuffer.Get(), &srvDesc, srvHandle);
+	_device.Get()->CreateShaderResourceView(_textureBuffer.Get(), &srvDesc, srvHandle);
 
 	return true;
 }

@@ -6,6 +6,8 @@
 #include <D3DCompiler.h>
 #include <vector>
 #include <wrl.h>
+#include "Device.h"
+#include "CommandAllocator.h"
 
 // 定数定義
 const int WINDOW_WIDTH = 640;
@@ -47,11 +49,9 @@ private:
 
 	ComPtr<IDXGIFactory4> _factory{ nullptr };						// DXGIインタフェースの生成機
 
-	D3D_FEATURE_LEVEL _level{};										// デバイスのフィーチャーレベル
-	ComPtr<ID3D12Device> _dev{ nullptr };							// デバイスポインタ
+	Device _device;													// D3D12デバイス
 
-
-	ComPtr<ID3D12CommandAllocator> _commandAllocator{ nullptr };	//コマンドアロケータ
+	CommandAllocator _commandAllocator;								// コマンドアロケータ
 	ComPtr<ID3D12CommandQueue> _commandQueue{ nullptr };			//コマンドキュー
 	ComPtr<ID3D12GraphicsCommandList> _commandList{ nullptr };		// コマンドリスト
 
@@ -84,7 +84,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> _icbDescHeap;						// インスタンシング用コンスタントバッファのデスクリプタヒープ
 
 	ComPtr<ID3D12GraphicsCommandList> _bundle;								// バンドル
-	ComPtr<ID3D12CommandAllocator> _bundleAllocator;				// バンドル用のアロケータ
+	CommandAllocator _bundleAllocator;								// バンドル用のアロケータ
 
 	// テクスチャリソース
 	ComPtr<ID3D12Resource> _textureBuffer;							// テクスチャバッファ
