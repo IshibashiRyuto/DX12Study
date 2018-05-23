@@ -23,7 +23,7 @@ bool CommandAllocator::Create(ID3D12Device * device, D3D12_COMMAND_LIST_TYPE com
 	return true;
 }
 
-ID3D12CommandAllocator * CommandAllocator::Get()
+ID3D12CommandAllocator *const CommandAllocator::Get()
 {
 	return _commandAllocator.Get();
 }

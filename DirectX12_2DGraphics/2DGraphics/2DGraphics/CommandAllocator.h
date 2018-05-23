@@ -21,7 +21,7 @@ public:
 	/// @fn Get
 	/// コマンドアロケータのポインタを取得する
 	/// @retval ID3D12CommandAllocator* コマンドアロケータのポインタ
-	ID3D12CommandAllocator* Get();
+	ID3D12CommandAllocator* const Get();
 
 	/// @fn GetComPtr
 	/// コマンドアロケータのComポインタを取得する
