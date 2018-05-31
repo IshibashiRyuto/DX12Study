@@ -351,7 +351,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 	
 	// シェーダの読み込み
 	{
-		result = D3DCompileFromFile(TEXT("shader.hlsl"),
+		result = D3DCompileFromFile(TEXT("GSTest.hlsl"),
 			nullptr,
 			nullptr,
 			"VSMain",
@@ -366,7 +366,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 			MessageBox(nullptr, TEXT("Failed Compile VertexShader."), TEXT("Failed"), MB_OK);
 			return false;
 		}
-		result = D3DCompileFromFile(TEXT("shader.hlsl"),
+		result = D3DCompileFromFile(TEXT("GSTest.hlsl"),
 			nullptr,
 			nullptr,
 			"PSMain",
@@ -382,6 +382,22 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 			return false;
 		}
 
+
+		result = D3DCompileFromFile(TEXT("GSTest.hlsl"),
+			nullptr,
+			nullptr,
+			"GSMain",
+			"gs_5_0",
+			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+			0,
+			&geometryShader,
+			nullptr);
+
+		if (FAILED(result))
+		{
+			MessageBox(nullptr, TEXT("Failed Compile GeometryShader."), TEXT("Failed"), MB_OK);
+			return false;
+		}
 	}
 
 

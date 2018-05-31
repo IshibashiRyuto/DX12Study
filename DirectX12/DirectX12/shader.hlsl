@@ -19,6 +19,25 @@ struct Out
     float2 uv : TEXCORD; // UV座標
 };
 
+/*
+struct VS_Out
+{
+	float4 position : POSITION; // システム座標
+	float3 normal : NORMAL;
+	float4 pos : POSITION; // 座標
+	float2 uv : TEXCORD; // UV座標
+};
+
+typedef VS_Out GS_In;
+
+struct GS_Out
+{
+	float4 pos  : SV_POSITION;
+	float3 normal : NORMAL;
+	float 2 uv : TEXCORD;
+};
+*/
+
 Out VSMain(float4 pos : POSITION ,float3 normal : NORMAL) 
 {
     Out result;
@@ -27,7 +46,17 @@ Out VSMain(float4 pos : POSITION ,float3 normal : NORMAL)
     result.normal = mul(world, float4(normal, 0));
     return result;
 }
+/*
 
+/// ジオメトリシェーダ
+[maxvertexcount(6)]
+void GS_Main(triangle GS_In In[3],
+	inout TriangleStream<GS_Out> TriStream)
+{
+	GS_Out Out;
+
+}
+*/
 float4 PSMain(Out o ) : SV_Target
 {
     float3 light = normalize(float3(-1, 1, -1));// 光源ベクトル

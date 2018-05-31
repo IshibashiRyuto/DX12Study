@@ -1,3 +1,5 @@
 ﻿  Dx12Device.cpp
-d:\ishibashi_github\dx12study\directx12\directx12\dx12device.cpp : fatal error C1041: プログラム データベース 'D:\Ishibashi_Github\DX12Study\DirectX12\DirectX12\x64\Debug\vc141.idb' を開けません。複数の CL.EXE が同じ .PDB ファイルに書き込む場合、/FS を使用してください。
-cl : コマンド ライン warning D9028: 簡易リビルド時のエラーです、通常のビルドに戻します
+d:\ishibashi_github\dx12study\directx12\directx12\dx12device.cpp(633): warning C4267: '=': 'size_t' から 'UINT' に変換しました。データが失われているかもしれません。
+d:\ishibashi_github\dx12study\directx12\directx12\dx12device.cpp(732): warning C4244: '=': 'unsigned __int64' から 'UINT' への変換です。データが失われる可能性があります。
+  DirectX12.vcxproj -> D:\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\DirectX12.exe
+  DirectX12.vcxproj -> D:\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\DirectX12.pdb (Partial PDB)

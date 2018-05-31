@@ -64,6 +64,8 @@ private:
 	std::vector<D3D12_INPUT_ELEMENT_DESC> _inputLayoutDescs;	// 頂点レイアウト
 	ID3DBlob* vertexShader{ nullptr };							// 頂点シェーダ
 	ID3DBlob* pixelShader{ nullptr };							// ピクセルシェーダ
+	ID3DBlob* geometryShader{ nullptr };						// ジオメトリシェーダ
+
 	ID3D12PipelineState* _pipelineStateObject{ nullptr };		// パイプラインステートオブジェクト
 	ID3D12Resource *_vertexBuffer{ nullptr };					// 頂点バッファ
 	ID3D12Resource *_textureBuffer{ nullptr };					// テクスチャバッファ
