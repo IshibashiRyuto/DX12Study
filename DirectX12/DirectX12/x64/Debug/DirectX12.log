@@ -1,5 +1,5 @@
-﻿  Dx12Device.cpp
-d:\ishibashi_github\dx12study\directx12\directx12\dx12device.cpp(633): warning C4267: '=': 'size_t' から 'UINT' に変換しました。データが失われているかもしれません。
-d:\ishibashi_github\dx12study\directx12\directx12\dx12device.cpp(732): warning C4244: '=': 'unsigned __int64' から 'UINT' への変換です。データが失われる可能性があります。
-  DirectX12.vcxproj -> D:\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\DirectX12.exe
-  DirectX12.vcxproj -> D:\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\DirectX12.pdb (Partial PDB)
+﻿FXC : warning X4717: Effects deprecated for D3DCompiler_47
+  
+  compilation object save succeeded; see C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\GSTest.cso
+  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.exe
+  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.pdb (Partial PDB)

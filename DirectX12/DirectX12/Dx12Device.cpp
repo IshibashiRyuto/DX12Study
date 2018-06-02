@@ -350,6 +350,40 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 	}
 	
 	// シェーダの読み込み
+	/*
+	{
+		result = D3DCompileFromFile(TEXT("shader.hlsl"),
+			nullptr,
+			nullptr,
+			"VSMain",
+			"vs_5_0",
+			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+			0,
+			&vertexShader,
+			nullptr);
+
+		if (FAILED(result))
+		{
+			MessageBox(nullptr, TEXT("Failed Compile VertexShader."), TEXT("Failed"), MB_OK);
+			return false;
+		}
+		result = D3DCompileFromFile(TEXT("shader.hlsl"),
+			nullptr,
+			nullptr,
+			"PSMain",
+			"ps_5_0",
+			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+			0,
+			&pixelShader,
+			nullptr);
+
+		if (FAILED(result))
+		{
+			MessageBox(nullptr, TEXT("Failed Compile PixelShader."), TEXT("Failed"), MB_OK);
+			return false;
+		}
+	}
+	*/
 	{
 		result = D3DCompileFromFile(TEXT("GSTest.hlsl"),
 			nullptr,
@@ -401,7 +435,6 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 	}
 
 
-
 	// PSO初期化
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsDesc = {};
@@ -414,6 +447,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		gpsDesc.DepthStencilState.StencilEnable = FALSE;				// マスクを使用するかどうか
 		gpsDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader);
 		gpsDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader);
+		gpsDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShader);
 		gpsDesc.InputLayout.NumElements = (UINT)_inputLayoutDescs.size();
 		gpsDesc.InputLayout.pInputElementDescs = &_inputLayoutDescs[0];
 		gpsDesc.pRootSignature = _rootSignature;
@@ -630,7 +664,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		heapDesc.NumDescriptors = 1 + MMDLoader::Instance()->GetMaterialData().size();
+		heapDesc.NumDescriptors = (UINT)(1 + MMDLoader::Instance()->GetMaterialData().size());
 		result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&_cbvDescriptorHeap));
 
 		if (FAILED(result))
@@ -729,7 +763,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 
 		cbvDesc.BufferLocation = _materialsConstantBuffer->GetGPUVirtualAddress();
 		auto bufferSize = (sizeof(Material::diffuseColor) + 0xff)&~0xff;
-		cbvDesc.SizeInBytes = bufferSize;
+		cbvDesc.SizeInBytes = (UINT)bufferSize;
 
 
 		cbvHandle = _cbvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
