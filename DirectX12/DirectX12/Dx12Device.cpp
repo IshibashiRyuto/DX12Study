@@ -858,6 +858,7 @@ void Dx12Device::Render()
 
 	// dsvのクリア
 	_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, _depthClearValue.DepthStencil.Depth, 0, 0, nullptr);
+	
 
 	//PMD表示用プリミティブトポロジのセット
 	_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
