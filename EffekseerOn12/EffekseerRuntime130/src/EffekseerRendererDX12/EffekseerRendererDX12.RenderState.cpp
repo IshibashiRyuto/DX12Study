@@ -1,12 +1,22 @@
 #include "EffekseerRendererDX12.RenderState.h"
 
 
-
-RenderState::RenderState()
+namespace EffekseerRendererDX12
 {
-}
+
+	RenderState::RenderState(RendererImplemented* renderer, D3D12_COMPARISON_FUNC)
+		: m_renderer(renderer)
+	{
+	}
 
 
-RenderState::~RenderState()
-{
+	RenderState::~RenderState()
+	{
+	}
+
+	void RenderState::Update(bool forced)
+	{
+
+	}
+
 }

@@ -318,9 +318,9 @@ namespace EffekseerRendererDX12
 		OriginalState*	m_state;
 		bool			m_restorationOfStates;
 
-		/*
-		D3D11_COMPARISON_FUNC	m_depthFunc;
-		*/
+		
+		D3D12_COMPARISON_FUNC	m_depthFunc;
+		
 
 		EffekseerRenderer::DistortingCallback* m_distortingCallback;
 
@@ -337,13 +337,13 @@ namespace EffekseerRendererDX12
 		~RendererImplemented();
 
 		void OnLostDevice();
-		void OnReetDevice();
+		void OnResetDevice();
 
 		/*
 			èâä˙âª
 		*/
 
-		bool Initialize(/*ID3D11Device* device, ID3D11DeviceContext* context, D3D11_COMPARISON_FUNC depthFunc*/);
+		bool Initialize(ID3D12Device* device, /*ID3D11DeviceContext* context,*/ D3D12_COMPARISON_FUNC depthFunc);
 
 		void Destroy();
 

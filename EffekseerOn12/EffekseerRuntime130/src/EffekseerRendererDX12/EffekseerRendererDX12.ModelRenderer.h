@@ -16,7 +16,7 @@ namespace EffekseerRendererDX12
 	private:
 		RendererImplemented*		m_renderer;
 		Shader*						m_shader_lighting_texture_normal;
-		Shader*						m_shader_lighting_norma;
+		Shader*						m_shader_lighting_normal;
 
 		Shader*							m_shader_lighting_texture;
 		Shader*							m_shader_lighting;

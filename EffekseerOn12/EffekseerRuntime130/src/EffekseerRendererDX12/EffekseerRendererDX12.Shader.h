@@ -58,6 +58,7 @@ namespace EffekseerRendererDX12
 		ID3D11VertexShader* GetVertexShader() const { return m_vertexShader; }
 		ID3D11PixelShader* GetPixelShader() const { return m_pixelShader; }
 		ID3D11InputLayout* GetLayoutInterface() const { return m_vertexDeclaration; }
+		*/
 
 		void SetVertexConstantBufferSize(int32_t size);
 		void SetPixelConstantBufferSize(int32_t size);
@@ -69,7 +70,6 @@ namespace EffekseerRendererDX12
 		void SetPixelRegisterCount(int32_t count) { m_pixelRegisterCount = count; }
 
 		void SetConstantBuffer();
-		*/
 	};
 
 }

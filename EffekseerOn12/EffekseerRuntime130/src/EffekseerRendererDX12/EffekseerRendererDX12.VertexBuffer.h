@@ -33,7 +33,7 @@ namespace EffekseerRendererDX12
 		virtual void OnResetDevice();
 
 		void Lock();
-		bool RingBufferLoc(int32_t size, int32_t& offset, void*& data);
+		bool RingBufferLock(int32_t size, int32_t& offset, void*& data);
 		bool TryRingBufferLock(int32_t size, int32_t& offset, void*& data);
 		void Unlock();
 
