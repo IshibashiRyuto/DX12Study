@@ -350,9 +350,8 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 	}
 	
 	// シェーダの読み込み
-	/*
 	{
-		result = D3DCompileFromFile(TEXT("shader.hlsl"),
+		result = D3DCompileFromFile(TEXT("ProjectionScreenTest2.hlsl"),
 			nullptr,
 			nullptr,
 			"VSMain",
@@ -367,40 +366,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 			MessageBox(nullptr, TEXT("Failed Compile VertexShader."), TEXT("Failed"), MB_OK);
 			return false;
 		}
-		result = D3DCompileFromFile(TEXT("shader.hlsl"),
-			nullptr,
-			nullptr,
-			"PSMain",
-			"ps_5_0",
-			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-			0,
-			&pixelShader,
-			nullptr);
-
-		if (FAILED(result))
-		{
-			MessageBox(nullptr, TEXT("Failed Compile PixelShader."), TEXT("Failed"), MB_OK);
-			return false;
-		}
-	}
-	*/
-	{
-		result = D3DCompileFromFile(TEXT("GSTest.hlsl"),
-			nullptr,
-			nullptr,
-			"VSMain",
-			"vs_5_0",
-			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-			0,
-			&vertexShader,
-			nullptr);
-
-		if (FAILED(result))
-		{
-			MessageBox(nullptr, TEXT("Failed Compile VertexShader."), TEXT("Failed"), MB_OK);
-			return false;
-		}
-		result = D3DCompileFromFile(TEXT("GSTest.hlsl"),
+		result = D3DCompileFromFile(TEXT("ProjectionScreenTest2.hlsl"),
 			nullptr,
 			nullptr,
 			"PSMain",
@@ -417,10 +383,10 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 		}
 
 
-		result = D3DCompileFromFile(TEXT("GSTest.hlsl"),
+		result = D3DCompileFromFile(TEXT("ProjectionScreenTest2.hlsl"),
 			nullptr,
 			nullptr,
-			"GSMain",
+			"ProjectionScreenGS",
 			"gs_5_0",
 			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 			0,

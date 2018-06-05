@@ -51,7 +51,7 @@ inout TriangleStream<GS_Out> TriStream)
 
     for (int i = 0; i < 3; ++i)
     {
-        if (In[i].pos.y < cutHeight)
+        if (In[i].pos.y > cutHeight)
         {
 			outRangeIndex[count] = i;
 			count++;
@@ -153,7 +153,7 @@ inout TriangleStream<GS_Out> TriStream)
 
 		newPoint1.pos = mul(mul(viewproj, world), pos1 + t1 * vec1);
 		newPoint1.normal = In[oldVerIdx].normal * t1 + In[cutVerIdx1].normal * (1.0f - t1) ;
-		newPoint1.uv = lerp(In[oldVerIdx].uv, In[cutVerIdx1].normal, t1);
+        newPoint1.uv = In[oldVerIdx].uv;
 		newPoint1.color = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
