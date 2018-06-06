@@ -222,53 +222,53 @@ namespace EffekseerRendererDX12
 		}
 	}
 
-	class OriginalState
-	{
-	private:
-		// この辺12にない　& PSOでまとめれそうなので保留
-		/*
-		ID3D11SamplerState*	m_samplers[4];
+	// 12のコマンドリスト的に要らないので削除
+	//class OriginalState
+	//{
+	//private:
+	//	/*
+	//	ID3D11SamplerState*	m_samplers[4];
 
-		ID3D11BlendState*	m_blendState;
-		float				m_blendFactor[4];
-		UINT				m_blendSampleMask;
+	//	ID3D11BlendState*	m_blendState;
+	//	float				m_blendFactor[4];
+	//	UINT				m_blendSampleMask;
 
-		ID3D11DepthStencilState*	m_depthStencilState;
-		UINT						m_depthStencilStateRef;
+	//	ID3D11DepthStencilState*	m_depthStencilState;
+	//	UINT						m_depthStencilStateRef;
 
-		ID3D11RasterizerState*		m_pRasterizerState;
+	//	ID3D11RasterizerState*		m_pRasterizerState;
 
-		ID3D11Buffer*				m_vertexConstantBuffer;
-		ID3D11Buffer*				m_pixelConstantBuffer;
+	//	ID3D11Buffer*				m_vertexConstantBuffer;
+	//	ID3D11Buffer*				m_pixelConstantBuffer;
 
-		ID3D11VertexShader*			m_pVS;
-		ID3D11PixelShader*			m_pPS;
+	//	ID3D11VertexShader*			m_pVS;
+	//	ID3D11PixelShader*			m_pPS;
 
-		ID3D11InputLayout*			m_layout;
-		D3D11_PRIMITIVE_TOPOLOGY	m_topology;
+	//	ID3D11InputLayout*			m_layout;
+	//	D3D11_PRIMITIVE_TOPOLOGY	m_topology;
 
-		ID3D11ShaderResourceView*	m_psSRVs[4];
-		*/
-		ID3D12Resource*		m_pVB;
-		UINT				m_vbStrides;
-		UINT				m_vbOffset;
+	//	ID3D11ShaderResourceView*	m_psSRVs[4];
+	//	*/
+	//	ID3D12Resource*		m_pVB;
+	//	UINT				m_vbStrides;
+	//	UINT				m_vbOffset;
 
-		ID3D12Resource*		m_pIB;
-		DXGI_FORMAT			m_ibFormat;
-		UINT				m_ibOffset;
+	//	ID3D12Resource*		m_pIB;
+	//	DXGI_FORMAT			m_ibFormat;
+	//	UINT				m_ibOffset;
 
-	public:
-		OriginalState();
-		~OriginalState();
-		void SaveState(/*ID3D11Device* device, ID3D11DeviceContext* context*/);
-		void LoadState(/*ID3D11Device* device, ID3D11DeviceContext* context*/);
-		void ReleaseState();
-	};
-
+	//public:
+	//	OriginalState();
+	//	~OriginalState();
+	//	void SaveState(/*ID3D11Device* device, ID3D11DeviceContext* context*/);
+	//	void LoadState(/*ID3D11Device* device, ID3D11DeviceContext* context*/);
+	//	void ReleaseState();
+	//};
+	
 
 	/*
 		@class RendererImplemented
-		ツール向けの描画期のを実装したクラス
+		ツール向けの描画機能を実装したクラス
 	*/
 	class RendererImplemented
 		: public Renderer
@@ -279,11 +279,9 @@ namespace EffekseerRendererDX12
 	private:
 		ID3D12Device*		m_device;
 		/*
-		TODO:なんかいろいろ作んなきゃだよね
-
-
 		ID3D11DeviceContext*	m_context;
 		*/
+		ID3D12GraphicsCommandList* m_commandList;
 
 		VertexBuffer*		m_vertexBuffer;
 		IndexBuffer*		m_indexBuffer;
@@ -299,7 +297,7 @@ namespace EffekseerRendererDX12
 
 		::Effekseer::Vector3D	m_lightDirection;
 		::Effekseer::Color		m_lightColor;
-		::Effekseer::Color		m_lightAmbiend;
+		::Effekseer::Color		m_lightAmbient;
 
 		::Effekseer::Matrix44	m_proj;
 		::Effekseer::Matrix44	m_camera;
@@ -315,7 +313,6 @@ namespace EffekseerRendererDX12
 		std::set<DeviceObject*>		m_deviceObjects;
 
 		//ステート
-		OriginalState*	m_state;
 		bool			m_restorationOfStates;
 
 		
@@ -343,7 +340,8 @@ namespace EffekseerRendererDX12
 			初期化
 		*/
 
-		bool Initialize(ID3D12Device* device, /*ID3D11DeviceContext* context,*/ D3D12_COMPARISON_FUNC depthFunc);
+		//bool Initialize(ID3D12Device* device, /*ID3D11DeviceContext* context,*/ D3D12_COMPARISON_FUNC depthFunc);
+		bool Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, D3D12_COMPARISON_FUNC depthFunc);
 
 		void Destroy();
 
@@ -369,6 +367,10 @@ namespace EffekseerRendererDX12
 			コンテキスト取得
 		*/
 		//ID3D11DeviceContext* GetContext();
+		/*
+			コマンドリスト取得
+		*/
+		ID3D12GraphicsCommandList* GetCommandList();
 
 		/*
 			頂点バッファ取得
@@ -492,6 +494,7 @@ namespace EffekseerRendererDX12
 		@brief	背景を設定する。
 		*/
 		//void SetBackground(ID3D11ShaderResourceView* background) override;
+		void SetBackground(ID3D12Resource* background);
 
 
 		EffekseerRenderer::DistortingCallback* GetDistortingCallback() override;
@@ -503,9 +506,9 @@ namespace EffekseerRendererDX12
 
 		// 頂点バッファをにデータをセットする
 		void SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t size);
-		//void SetVertexBuffer(ID3D11Buffer* vertexBuffer, int32_t size);
+		void SetVertexBuffer(ID3D12Resource* vertexBuffer, int32_t size);
 		void SetIndexBuffer(IndexBuffer* indexBuffer);
-		//void SetIndexBuffer(ID3D11Buffer* indexBuffer);
+		void SetIndexBuffer(ID3D12Resource* indexBuffer);
 
 		void SetLayout(Shader* shader);
 		void DrawSprites(int32_t spriteCount, int32_t vertexOffset);

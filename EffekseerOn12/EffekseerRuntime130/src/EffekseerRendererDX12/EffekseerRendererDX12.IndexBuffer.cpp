@@ -19,8 +19,29 @@ namespace EffekseerRendererDX12
 
 	IndexBuffer * IndexBuffer::Create(RendererImplemented * renderer, int maxCount, bool isDynamic)
 	{
-		//todo
-		return nullptr;
+		/*
+		D3D11_BUFFER_DESC hBufferDesc;
+		hBufferDesc.Usage = isDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
+		hBufferDesc.ByteWidth = sizeof(uint16_t) * maxCount;
+		hBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		hBufferDesc.CPUAccessFlags = isDynamic ? D3D11_CPU_ACCESS_WRITE : 0;
+		hBufferDesc.MiscFlags = 0;
+		hBufferDesc.StructureByteStride = sizeof(uint16_t);
+
+		D3D11_SUBRESOURCE_DATA hSubResourceData;
+		hSubResourceData.pSysMem = NULL;
+		hSubResourceData.SysMemPitch = 0;
+		hSubResourceData.SysMemSlicePitch = 0;
+
+		// ¶¬
+		ID3D11Buffer* ib = NULL;
+		if (FAILED(renderer->GetDevice()->CreateBuffer(&hBufferDesc, NULL, &ib)))
+		{
+			return NULL;
+		}
+
+		return new IndexBuffer(renderer, ib, maxCount, isDynamic);
+		*/
 	}
 
 	void IndexBuffer::OnLostDevice()
@@ -46,10 +67,32 @@ namespace EffekseerRendererDX12
 		if (m_isDynamic)
 		{
 			// todo
+			/*
+			
+			D3D11_MAPPED_SUBRESOURCE mappedResource;
+			GetRenderer()->GetContext()->Map(
+				m_buffer,
+				0,
+				D3D11_MAP_WRITE_DISCARD,
+				0,
+				&mappedResource );
+
+			memcpy( mappedResource.pData, m_resource, sizeof(uint16_t) * GetMaxCount() );
+
+			GetRenderer()->GetContext()->Unmap( m_buffer, 0 );
+			*/
 		}
 		else
 		{
-			//todo
+			/*
+			GetRenderer()->GetContext()->UpdateSubresource(
+			m_buffer,
+			0,
+			NULL,
+			m_resource,
+			0,
+			0 );
+			*/
 		}
 
 		m_resource = nullptr;

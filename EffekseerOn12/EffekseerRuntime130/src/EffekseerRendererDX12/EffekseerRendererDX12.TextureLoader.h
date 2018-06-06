@@ -1,3 +1,5 @@
+#ifdef __EFFEKSEER_RENDERER_INTERNAL_LOADER__
+
 #pragma once
 
 #include "EffekseerRendererDX12.RendererImplemented.h"
@@ -23,3 +25,5 @@ namespace EffekseerRendererDX12
 	};
 
 }
+
+#endif

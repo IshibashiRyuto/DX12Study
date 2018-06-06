@@ -31,7 +31,18 @@ namespace EffekseerRendererDX12
 		@brief	インスタンスを生成する
 		@return	インスタンス
 		*/
-		static Renderer* Create(/*引数については調査中*/);
+		static Renderer* Create(
+			ID3D12Device* device,
+			ID3D12GraphicsCommandList* commandList,//ID3D11DeviceContext context,
+			int32_t squareMaxCount,
+			D3D12_COMPARISON_FUNC depthFunc = D3D12_COMPARISON_FUNC_LESS);
+		/*
+		static Renderer* Create(
+			ID3D11Device* device,
+			ID3D11DeviceContext* context,
+			int32_t squareMaxCount,
+			D3D11_COMPARISON_FUNC depthFunc = D3D11_COMPARISON_LESS);
+			*/
 
 		// デバイスを取得する
 		virtual ID3D12Device* GetDevice() = 0;
@@ -40,7 +51,10 @@ namespace EffekseerRendererDX12
 		virtual Effekseer::TextureData* GetBackground() = 0;
 
 		// 背景を設定する
-		virtual void SetBackground(/*引数については調査中*/) = 0;
+		virtual void SetBackground(ID3D12Resource* background) = 0;
+		/*
+		virtual void SetBackground(ID3D11ShaderResourceView* background) = 0;
+		*/
 	};
 
 	// @class Model
