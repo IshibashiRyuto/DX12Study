@@ -33,7 +33,8 @@ namespace EffekseerRendererDX12
 		*/
 		static Renderer* Create(
 			ID3D12Device* device,
-			ID3D12GraphicsCommandList* commandList,//ID3D11DeviceContext context,
+			ID3D12GraphicsCommandList* commandList,
+			ID3D12CommandAllocator* commandAllocator,//ID3D11DeviceContext context,
 			int32_t squareMaxCount,
 			D3D12_COMPARISON_FUNC depthFunc = D3D12_COMPARISON_FUNC_LESS);
 		/*

@@ -99,12 +99,13 @@ namespace EffekseerRendererDX12
 	
 	Renderer* Renderer::Create(
 		ID3D12Device* device,
-		ID3D12GraphicsCommandList* commandList,//ID3D11DeviceContext context
+		ID3D12GraphicsCommandList* commandList,
+		ID3D12CommandAllocator* commandAllocator,//ID3D11DeviceContext context
 		int32_t squareMaxCount,
 		D3D12_COMPARISON_FUNC depthFunc)
 	{
 		RendererImplemented* renderer = new RendererImplemented(squareMaxCount);
-		if (renderer->Initialize(device,commandList,depthFunc))
+		if (renderer->Initialize(device,commandList,commandAllocator,depthFunc))
 		{
 			return renderer;
 		}
@@ -115,6 +116,7 @@ namespace EffekseerRendererDX12
 		: m_device(nullptr)
 		//, m_context( nullptr)
 		, m_commandList(nullptr)
+		, m_commandAllocator(nullptr)
 		, m_vertexBuffer(nullptr)
 		, m_indexBuffer(nullptr)
 		, m_squareMaxCount(squareMaxCount)
@@ -187,10 +189,11 @@ namespace EffekseerRendererDX12
 		}
 	}
 
-	bool RendererImplemented::Initialize(ID3D12Device* device,ID3D12GraphicsCommandList* commandList, D3D12_COMPARISON_FUNC depthFunc)
+	bool RendererImplemented::Initialize(ID3D12Device* device,ID3D12GraphicsCommandList* commandList, ID3D12CommandAllocator* commandAllocator, D3D12_COMPARISON_FUNC depthFunc)
 	{
 		m_device = device;
 		m_commandList = commandList;
+		m_commandAllocator = commandAllocator;
 		m_depthFunc = depthFunc;
 
 		// ’¸“_‚Ì¶¬
@@ -542,6 +545,16 @@ namespace EffekseerRendererDX12
 	{
 		// GetContext()->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// GetContext()->IASetInputLayout( shader->GetLayoutInterface() );
+	}
+
+	void RendererImplemented::DrawSprites(int32_t spriteCount, int32_t vertexOffset)
+	{
+		/*
+			GetContext->DrawIndexed(
+				spriteCount * 2 * 3,
+				0,
+				vertexOffset );
+		*/
 	}
 
 	void RendererImplemented::DrawPolygon(int32_t vertexCount, int32_t)

@@ -12,15 +12,17 @@ namespace EffekseerRendererDX12
 	{
 	private:
 		ID3D12Resource*		m_buffer;
+		D3D12_INDEX_BUFFER_VIEW m_bufferView;
 		void*				m_lockedResource;
 
-		IndexBuffer(RendererImplemented* renderer, ID3D12Resource* buffer, int maxCount, bool isDynamic);
+		IndexBuffer(RendererImplemented* renderer, ID3D12Resource* buffer, const D3D12_INDEX_BUFFER_VIEW& bufferView, int maxCount, bool isDynamic);
 	public:
 		virtual ~IndexBuffer();
 
 		static IndexBuffer* Create(RendererImplemented* renderer, int maxCount, bool isDynamic);
 
-		ID3D12Resource* GetnInterface() { return m_buffer; };
+		ID3D12Resource* GetnInterface() { return m_buffer; }
+		//D3D12_INDEX_BUFFER_VIEW& GetInterface() { return m_bufferView; }
 
 		virtual void OnLostDevice();
 		virtual void OnResetDevice();
