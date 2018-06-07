@@ -4,126 +4,123 @@
 namespace EffekseerRendererDX12
 {
 
-	RenderState::RenderState(RendererImplemented* renderer, D3D12_COMPARISON_FUNC)
+	RenderState::RenderState(RendererImplemented* renderer, D3D12_COMPARISON_FUNC depthFunc)
 		: m_renderer(renderer)
 	{
-		/*
-		D3D11_CULL_MODE cullTbl[] = 
+		// カリングモードのテーブル作成
+		D3D12_CULL_MODE cullTbl[] =
 		{
-			D3D11_CULL_BACK,
-			D3D11_CULL_FRONT,
-			D3D11_CULL_NONE,
+			D3D12_CULL_MODE_BACK,
+			D3D12_CULL_MODE_FRONT,
+			D3D12_CULL_MODE_NONE,
 		};
 
-		for( int32_t ct = 0; ct < CulTypeCount; ct++ )
+		// ラスタライザデスクの作成
+		for (int32_t ct = 0; ct < CulTypeCount; ++ct)
 		{
-			D3D11_RASTERIZER_DESC rsDesc;
-			ZeroMemory( &rsDesc, sizeof( D3D11_RASTERIZER_DESC ) );
-			rsDesc.CullMode = cullTbl[ct];
-			rsDesc.FillMode = D3D11_FILL_SOLID; 
-			rsDesc.DepthClipEnable = TRUE;
-			m_renderer->GetDevice()->CreateRasterizerState( &rsDesc, &m_rStates[ct] );
+			ZeroMemory(&m_rStates[ct], sizeof(D3D12_RASTERIZER_DESC));
+			m_rStates[ct].CullMode = cullTbl[ct];
+			m_rStates[ct].FillMode = D3D12_FILL_MODE_SOLID;
+			m_rStates[ct].DepthClipEnable = TRUE;
 		}
 
-		for( int32_t dt = 0; dt < DepthTestCount; dt++ )
+		// デプスステンシルデスクの作成
+		for (int32_t dt = 0; dt < DepthTestCount; ++dt)
 		{
-			for( int32_t dw = 0; dw < DepthWriteCount; dw++ )
+			for (int32_t dw = 0; dw < DepthWriteCount; ++dw)
 			{
-				D3D11_DEPTH_STENCIL_DESC dsDesc;
-				ZeroMemory( &dsDesc, sizeof( D3D11_DEPTH_STENCIL_DESC ) );
-				dsDesc.DepthEnable		= dt;
-				dsDesc.DepthWriteMask	= (D3D11_DEPTH_WRITE_MASK)dw;
-				dsDesc.DepthFunc = depthFunc;
-				dsDesc.StencilEnable	= FALSE;
-				m_renderer->GetDevice()->CreateDepthStencilState( &dsDesc, &m_dStates[dt][dw] );
+				ZeroMemory(&m_dStates[dt][dw], sizeof(D3D12_DEPTH_STENCIL_DESC));
+				m_dStates[dt][dw].DepthEnable = dt;
+				m_dStates[dt][dw].DepthWriteMask = (D3D12_DEPTH_WRITE_MASK)dw;
+				m_dStates[dt][dw].DepthFunc = depthFunc;
+				m_dStates[dt][dw].StencilEnable = FALSE;
 			}
 		}
 
-		for ( int32_t i = 0; i < AlphaTypeCount; i++ )
+		// ブレンドデスクの生成
+		for (int32_t i = 0; i < AlphaTypeCount; ++i)
 		{
 			auto type = (::Effekseer::AlphaBlendType)i;
+			ZeroMemory(&m_bStates[i], sizeof(D3D12_BLEND_DESC));
+			m_bStates[i].AlphaToCoverageEnable = false;
 
-			D3D11_BLEND_DESC Desc;
-			ZeroMemory( &Desc, sizeof(Desc) );
-			Desc.AlphaToCoverageEnable = false;
-
-			for ( int32_t k = 0; k < 8; k++ )
+			for (int32_t k = 0; k < 8; ++k)
 			{
-				Desc.RenderTarget[k].BlendEnable = type != ::Effekseer::AlphaBlendType::Opacity;
-				Desc.RenderTarget[k].RenderTargetWriteMask	= D3D11_COLOR_WRITE_ENABLE_ALL;
-				Desc.RenderTarget[k].SrcBlendAlpha  = D3D11_BLEND_ONE;
-				Desc.RenderTarget[k].DestBlendAlpha = D3D11_BLEND_ONE;
-				Desc.RenderTarget[k].BlendOpAlpha   = D3D11_BLEND_OP_MAX;
-
+				m_bStates[i].RenderTarget[k].BlendEnable = type != ::Effekseer::AlphaBlendType::Opacity;
+				m_bStates[i].RenderTarget[k].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+				m_bStates[i].RenderTarget[k].SrcBlendAlpha = D3D12_BLEND_ONE;
+				m_bStates[i].RenderTarget[k].DestBlendAlpha = D3D12_BLEND_ONE;
+				m_bStates[i].RenderTarget[k].BlendOpAlpha = D3D12_BLEND_OP_MAX;
 				switch (type)
 				{
 				case ::Effekseer::AlphaBlendType::Opacity:
-					Desc.RenderTarget[k].DestBlend = D3D11_BLEND_ZERO;
-					Desc.RenderTarget[k].SrcBlend  = D3D11_BLEND_ONE;
-					Desc.RenderTarget[k].BlendOp   = D3D11_BLEND_OP_ADD;
+					m_bStates[i].RenderTarget[k].DestBlend = D3D12_BLEND_ZERO;
+					m_bStates[i].RenderTarget[k].SrcBlend = D3D12_BLEND_ONE;
+					m_bStates[i].RenderTarget[k].BlendOp = D3D12_BLEND_OP_ADD;
 					break;
 				case ::Effekseer::AlphaBlendType::Blend:
-					Desc.RenderTarget[k].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-					Desc.RenderTarget[k].SrcBlend  = D3D11_BLEND_SRC_ALPHA;
-					Desc.RenderTarget[k].BlendOp   = D3D11_BLEND_OP_ADD;
+					m_bStates[i].RenderTarget[k].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+					m_bStates[i].RenderTarget[k].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+					m_bStates[i].RenderTarget[k].BlendOp = D3D12_BLEND_OP_ADD;
 					break;
 				case ::Effekseer::AlphaBlendType::Add:
-					Desc.RenderTarget[k].DestBlend = D3D11_BLEND_ONE;
-					Desc.RenderTarget[k].SrcBlend  = D3D11_BLEND_SRC_ALPHA;
-					Desc.RenderTarget[k].BlendOp   = D3D11_BLEND_OP_ADD;
+					m_bStates[i].RenderTarget[k].DestBlend = D3D12_BLEND_ONE;
+					m_bStates[i].RenderTarget[k].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+					m_bStates[i].RenderTarget[k].BlendOp = D3D12_BLEND_OP_ADD;
 					break;
 				case ::Effekseer::AlphaBlendType::Sub:
-					Desc.RenderTarget[k].DestBlend = D3D11_BLEND_ONE;
-					Desc.RenderTarget[k].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-					Desc.RenderTarget[k].BlendOp = D3D11_BLEND_OP_REV_SUBTRACT;
+					m_bStates[i].RenderTarget[k].DestBlend = D3D12_BLEND_ONE;
+					m_bStates[i].RenderTarget[k].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+					m_bStates[i].RenderTarget[k].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
 					break;
-
 				case ::Effekseer::AlphaBlendType::Mul:
-					Desc.RenderTarget[k].DestBlend = D3D11_BLEND_SRC_COLOR;
-					Desc.RenderTarget[k].SrcBlend  = D3D11_BLEND_ZERO;
-					Desc.RenderTarget[k].BlendOp   = D3D11_BLEND_OP_ADD;
+					m_bStates[i].RenderTarget[k].DestBlend = D3D12_BLEND_SRC_COLOR;
+					m_bStates[i].RenderTarget[k].SrcBlend = D3D12_BLEND_ZERO;
+					m_bStates[i].RenderTarget[k].BlendOp = D3D12_BLEND_OP_ADD;
 					break;
-	
 				}
 			}
-
-			m_renderer->GetDevice()->CreateBlendState( &Desc, &m_bStates[i] );
 		}
 
-		for( int32_t f = 0; f < TextureFilterCount; f++ )
+		// サンプラの作成
+		for (int32_t f = 0; f < TextureFilterCount; ++f)
 		{
-			for( int32_t w = 0; w < TextureWrapCount; w++ )
+			for (int32_t w = 0; w < TextureWrapCount; ++w)
 			{
-				D3D11_TEXTURE_ADDRESS_MODE Addres[] = {
-					D3D11_TEXTURE_ADDRESS_WRAP,
-					D3D11_TEXTURE_ADDRESS_CLAMP,
+				D3D12_TEXTURE_ADDRESS_MODE Addres[] =
+				{
+					D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+					D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
 				};
 
-				D3D11_FILTER Filter[] = {
-					D3D11_FILTER_MIN_MAG_MIP_POINT,
-					D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+				D3D12_FILTER Filter[] = 
+				{
+					D3D12_FILTER_MIN_MAG_MIP_POINT,
+					D3D12_FILTER_MIN_MAG_MIP_LINEAR,
 				};
 
-				uint32_t Anisotropic[] = {
-					0, 0,
+				uint32_t Anisotropic[] =
+				{
+					0,0,
 				};
 
-				D3D11_SAMPLER_DESC SamlerDesc = {
-					Filter[f],
-					Addres[w],
-					Addres[w],
-					Addres[w],
-					0.0f,
-					Anisotropic[f],
-					D3D11_COMPARISON_ALWAYS,
-					{ 0.0f, 0.0f, 0.0f, 0.0f },
-					0.0f,
-					D3D11_FLOAT32_MAX, };
-
-				m_renderer->GetDevice()->CreateSamplerState( &SamlerDesc, &m_sStates[f][w] );
+				m_sStates[f][w].Filter = Filter[f];
+				m_sStates[f][w].AddressU = Addres[w];
+				m_sStates[f][w].AddressV = Addres[w];
+				m_sStates[f][w].AddressW = Addres[w];
+				m_sStates[f][w].MipLODBias = 0.0f;
+				m_sStates[f][w].MaxAnisotropy = Anisotropic[f];
+				m_sStates[f][w].ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+				m_sStates[f][w].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+				m_sStates[f][w].MinLOD = 0.0f;
+				m_sStates[f][w].MaxLOD = D3D12_FLOAT32_MAX;
+				m_sStates[f][w].ShaderRegister = 0;
+				m_sStates[f][w].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+				m_sStates[f][w].RegisterSpace = 0;
 			}
 		}
-		*/
+		// パイプラインステートデスクの初期化
+
 	}
 
 
@@ -133,7 +130,104 @@ namespace EffekseerRendererDX12
 
 	void RenderState::Update(bool forced)
 	{
+		bool changeDepth = forced;
+		bool changeRasterizer = forced;
+		bool changeBlend = forced;
+		bool changeSamplerEither = forced;
 
+		// デプスステンシルステートの変更
+		if (m_active.DepthTest != m_next.DepthTest || forced)
+		{
+			changeDepth = true;
+		}
+
+		if (m_active.DepthWrite != m_next.DepthWrite || forced)
+		{
+			changeDepth = true;
+		}
+
+		if (changeDepth)
+		{
+			m_pipelineState.DepthStencilState = m_dStates[m_next.DepthTest][m_next.DepthWrite];
+		}
+
+		// ラスタライザステートの変更
+		if (m_active.CullingType != m_next.CullingType || forced)
+		{
+			changeRasterizer = true;
+		}
+
+		if (changeRasterizer)
+		{
+			auto cullingType = (int32_t)m_next.CullingType;
+			m_pipelineState.RasterizerState = m_rStates[cullingType];
+		}
+
+		// ブレンドステートの変更
+		if (m_active.AlphaBlend != m_next.AlphaBlend || forced)
+		{
+			changeBlend = true;
+		}
+
+		if (changeBlend)
+		{
+			auto alphaBlend = (int32_t)m_next.AlphaBlend;
+			m_pipelineState.BlendState = m_bStates[alphaBlend];
+			float blendFactor[] = { 0.0f,0.0f,0.0f,0.0f };
+			m_renderer->GetCommandList()->OMSetBlendFactor(blendFactor);
+		}
+
+		// サンプラの変更
+		// ここ、ルートシグネチャに関連するんですがそれは……
+		for (int32_t i = 0; i < 4; ++i)
+		{
+			bool changeSampler = forced;
+			if (m_active.TextureFilterTypes[i] != m_next.TextureFilterTypes[i] || forced)
+			{
+				changeSampler = true;
+			}
+
+			if (m_active.TextureWrapTypes[i] != m_next.TextureWrapTypes[i] || forced)
+			{
+				changeSampler = true;
+			}
+
+			if (changeSampler)
+			{
+				changeSamplerEither = true;
+				auto filter = (int32_t)m_next.TextureFilterTypes[i];
+				auto wrap = (int32_t)m_next.TextureWrapTypes[i];
+
+				// サンプラ変更処理
+			}
+		}
+
+		// パイプラインステートの変更をコマンドに書き出し
+		if (changeDepth || changeRasterizer || changeBlend || changeSamplerEither)
+		{
+			m_renderer->GetCommandList()->SetPipelineState(GetPipelineState());
+		}
+	}
+
+	ID3D12PipelineState * RenderState::GetPipelineState()
+	{
+		auto it = m_pipelineStateMap.find(m_pipelineState);
+		if (it == m_pipelineStateMap.end())
+		{
+			ID3D12PipelineState* pso;
+			auto hr = m_renderer->GetDevice()->CreateGraphicsPipelineState(&m_pipelineState, IID_PPV_ARGS(&pso));
+			if (FAILED(hr))
+			{
+#ifdef _DEBUG
+				MessageBox(nullptr, TEXT("Failed Create PipelineStateObject."), TEXT("Failed"), MB_OK);
+				return nullptr;
+#endif
+			}
+			m_pipelineStateMap[m_pipelineState] = pso;
+			return pso;
+		}
+
+		return m_pipelineStateMap[m_pipelineState];
 	}
 
 }

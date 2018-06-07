@@ -1,12 +1,9 @@
 #include "EffekseerRendererDX12.Shader.h"
 
 
-
-Shader::Shader()
+namespace EffekseerRendererDX12
 {
-}
 
 
-Shader::~Shader()
-{
+
 }

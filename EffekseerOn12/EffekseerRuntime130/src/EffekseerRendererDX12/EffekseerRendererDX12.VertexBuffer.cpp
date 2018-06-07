@@ -2,10 +2,11 @@
 
 namespace EffekseerRendererDX12
 {
-	VertexBuffer::VertexBuffer(RendererImplemented* renderer, ID3D12Resource* buffer, int size, bool isDynamic)
+	VertexBuffer::VertexBuffer(RendererImplemented* renderer, ID3D12Resource* buffer, const D3D12_VERTEX_BUFFER_VIEW& bufferView, int size, bool isDynamic)
 		: DeviceObject(renderer)
 		, VertexBufferBase(size, isDynamic)
 		, m_buffer(buffer)
+		, m_bufferView(bufferView)
 		, m_vertexRingOffset(0)
 		, m_ringBufferLock(false)
 		, m_ringLockedOffset(0)
@@ -22,33 +23,45 @@ namespace EffekseerRendererDX12
 
 	VertexBuffer* VertexBuffer::Create(RendererImplemented* renderer, int size, bool isDynamic)
 	{
-		/*
-		D3D11_BUFFER_DESC hBufferDesc;
-		ZeroMemory(&hBufferDesc, sizeof(hBufferDesc));
 
-		hBufferDesc.ByteWidth = size;
-		hBufferDesc.Usage = isDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
-		hBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		hBufferDesc.CPUAccessFlags = isDynamic ? D3D11_CPU_ACCESS_WRITE : 0;
-		hBufferDesc.MiscFlags = 0;
-		hBufferDesc.StructureByteStride = sizeof(float);
+		// とりあえずdynamicかどうかにかかわらずUploadで作成
+		D3D12_HEAP_PROPERTIES hHeapPropertie;
+		//hHeapPropertie.Type = isDynamic ? D3D12_HEAP_TYPE_UPLOAD : D3D12_HEAP_TYPE_CUSTOM;
+		hHeapPropertie.Type = D3D12_HEAP_TYPE_UPLOAD;
+		hHeapPropertie.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		hHeapPropertie.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		hHeapPropertie.CreationNodeMask = 1;
+		hHeapPropertie.VisibleNodeMask = 1;
 
-		D3D11_SUBRESOURCE_DATA hSubResourceData;
-		hSubResourceData.pSysMem = NULL;
-		hSubResourceData.SysMemPitch = 0;
-		hSubResourceData.SysMemSlicePitch = 0;
+		D3D12_RESOURCE_DESC hBufferDesc;
+		hBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		hBufferDesc.Alignment = 0;
+		hBufferDesc.Width = size;
+		hBufferDesc.Height = 1;
+		hBufferDesc.DepthOrArraySize = 1;
+		hBufferDesc.MipLevels = 1;
+		hBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+		hBufferDesc.SampleDesc.Count = 1;
+		hBufferDesc.SampleDesc.Quality = 0;
+		hBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		hBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
+		ID3D12Resource* vb{ nullptr };
 
-		// 生成
-		ID3D11Buffer* vb = NULL;
-		HRESULT hr = renderer->GetDevice()->CreateBuffer(&hBufferDesc, NULL, &vb);
-		if (FAILED(hr))
+		if (FAILED(renderer->GetDevice()->CreateCommittedResource(&hHeapPropertie, D3D12_HEAP_FLAG_NONE, &hBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vb))))
 		{
-			return NULL;
+#ifdef _DEBUG
+			MessageBox(nullptr, TEXT("Failed Create IndexBuffer."), TEXT("Failed"), MB_OK);
+#endif
+			return nullptr;
 		}
 
-		return new VertexBuffer(renderer, vb, size, isDynamic);
-		*/
+		D3D12_VERTEX_BUFFER_VIEW vbv;
+		vbv.BufferLocation = vb->GetGPUVirtualAddress();
+		vbv.StrideInBytes = sizeof(float);
+		vbv.SizeInBytes = size;
+
+		return new VertexBuffer(renderer, vb, vbv, size, isDynamic);
 	}
 
 	void VertexBuffer::OnLostDevice()
@@ -115,44 +128,25 @@ namespace EffekseerRendererDX12
 
 		if (m_isLock)
 		{
-			//map処理
-			/*
-			D3D11_MAPPED_SUBRESOURCE mappedResource;
-			GetRenderer()->GetContext()->Map(
-				m_buffer,
-				0,
-				D3D11_MAP_WRITE_DISCARD,
-				0,
-				&mappedResource);
-
-			memcpy(mappedResource.pData, m_resource, m_size);
-
-			GetRenderer()->GetContext()->Unmap(m_buffer, 0);
-			*/
+			char* buf;
+			m_buffer->Map(0, nullptr, (void**)buf);
+			memcpy(buf, m_resource, m_size);
+			m_buffer->Unmap(0, nullptr);
 		}
 
 		if (m_ringBufferLock)
 		{
-			// リングバッファのマップ処理
-			/*
-			D3D11_MAPPED_SUBRESOURCE mappedResource;
-			GetRenderer()->GetContext()->Map(
-				m_buffer,
-				0,
-				m_ringLockedOffset != 0 ? D3D11_MAP_WRITE_NO_OVERWRITE : D3D11_MAP_WRITE_DISCARD,
-				0,
-				&mappedResource );
-	
-			uint8_t* dst = (uint8_t*)mappedResource.pData;
-			dst += m_ringLockedOffset;
+			char* buf;
+			m_buffer->Map(0, nullptr, (void**)buf);
 
-			uint8_t* src = (uint8_t*) m_resource;
-			//src += m_ringLockedOffset;
+			uint8_t* dst = (uint8_t*)buf;
+			buf += m_ringLockedOffset;
 
-			memcpy( dst, src, m_ringLockedSize );
-	
-			GetRenderer()->GetContext()->Unmap( m_buffer, 0 );
-			*/
+			uint8_t* src = (uint8_t*)m_resource;
+
+			memcpy(dst, src, m_ringLockedSize);
+
+			m_buffer->Unmap(0, nullptr);
 		}
 
 		m_resource = nullptr;
