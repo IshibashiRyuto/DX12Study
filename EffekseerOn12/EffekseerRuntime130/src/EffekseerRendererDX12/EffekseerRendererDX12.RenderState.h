@@ -6,10 +6,6 @@
 
 namespace EffekseerRendererDX12
 {
-	/// レンダリング情報を格納するクラス
-	/// @note:もしかすると、ここにPSOを埋め込んでおいたほうがいいんじゃないの
-	/// @note追記:仕様上、psoを1000個とかバカげた数作らないといけないことが発覚
-	/// ちょっと考えなおそうぜ、これ
 	class RenderState
 		: public ::EffekseerRenderer::RenderStateBase
 	{
@@ -23,12 +19,6 @@ namespace EffekseerRendererDX12
 		static const int32_t		TextureWrapCount = 2;
 
 		RendererImplemented*		m_renderer;
-		/*
-		ID3D11RasterizerState*		m_rStates[CulTypeCount];
-		ID3D11DepthStencilState*	m_dStates[DepthTestCount][DepthWriteCount];
-		ID3D11BlendState*			m_bStates[AlphaTypeCount];
-		ID3D11SamplerState*			m_sStates[TextureFilterCount][TextureWrapCount];
-		*/
 
 		D3D12_BLEND_DESC m_bStates[AlphaTypeCount];
 		D3D12_RASTERIZER_DESC m_rStates[CulTypeCount];
@@ -38,6 +28,8 @@ namespace EffekseerRendererDX12
 
 		std::map<D3D12_GRAPHICS_PIPELINE_STATE_DESC, ID3D12PipelineState*> m_pipelineStateMap;
 
+
+
 	public:
 		RenderState(RendererImplemented* renderer, D3D12_COMPARISON_FUNC depthFunc);
 		virtual ~RenderState();
@@ -45,6 +37,9 @@ namespace EffekseerRendererDX12
 
 		// 現在のパイプラインステートに紐づけられたPSOを取得する
 		ID3D12PipelineState* GetPipelineState();
+
+		// シェーダを変更する
+		void ChangeShader(Shader* shader);
 	};
 }
 

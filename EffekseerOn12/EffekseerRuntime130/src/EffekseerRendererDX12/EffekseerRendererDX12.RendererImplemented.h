@@ -307,6 +307,7 @@ namespace EffekseerRendererDX12
 		// À•WŒn
 		::Effekseer::CoordinateSystem			m_coordinateSystem;
 
+		// •`‰æˆ—Œn
 		::EffekseerRenderer::RenderStateBase*	m_renderState;
 
 		::Effekseer::TextureData	m_background;

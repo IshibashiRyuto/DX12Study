@@ -2,6 +2,9 @@
 
 #include"EffekseerRendererDX12.RendererImplemented.h"
 #include"EffekseerRendererDX12.DeviceObject.h"
+#include <wrl.h>
+
+using Microsoft::WRL::ComPtr;
 
 namespace EffekseerRendererDX12
 {
@@ -9,27 +12,33 @@ namespace EffekseerRendererDX12
 		: public DeviceObject
 	{
 	private:
-		// TODO: PSOにまとめれそう
-		/*
-		ID3D11VertexShader*			m_vertexShader;
-		ID3D11PixelShader*			m_pixelShader;
-		ID3D11InputLayout*			m_vertexDeclaration;
-		*/
+		D3D12_SHADER_BYTECODE m_vertexShader;
+		D3D12_SHADER_BYTECODE m_pixelShader;
+		D3D12_INPUT_ELEMENT_DESC *m_InputElements;
+		D3D12_INPUT_LAYOUT_DESC m_vertexDeclaration;
 		
+
 		// TODO: ディスクリプタで管理しよう
-		/*
 		void*					m_vertexConstantBuffer;
-		void*					m_pixelConstantBuffer;;
+		void*					m_pixelConstantBuffer;
 
-	int32_t					m_vertexRegisterCount;
-	int32_t					m_pixelRegisterCount;
-		*/
+		int32_t					m_vertexRegisterCount;
+		int32_t					m_pixelRegisterCount;
 
-		Shader( /*
-			RendererImplemented* renderer,
-			ID3D11VertexShader* vertexShader,
-			ID3D11PixelShader* pixelShader,
-			ID3D11InputLayout* vertexDeclaration*/);
+		ID3D12DescriptorHeap* m_constantBufferDescriptorHeap;
+		D3D12_CPU_DESCRIPTOR_HANDLE m_handle;
+
+		ComPtr<ID3D12Resource> m_constantBufferToVS;
+		D3D12_CONSTANT_BUFFER_VIEW_DESC m_cbvToVS;
+		ComPtr<ID3D12Resource> m_constantBufferToPS;
+		D3D12_CONSTANT_BUFFER_VIEW_DESC m_cbvToPS;
+
+		Shader(RendererImplemented* renderer,
+			const D3D12_SHADER_BYTECODE& vertexShader,
+			const D3D12_SHADER_BYTECODE& pixelShader,
+			const D3D12_INPUT_LAYOUT_DESC& vertexDeclaration,
+			D3D12_INPUT_ELEMENT_DESC* inputElements,
+			ID3D12DescriptorHeap* constantBufferDescriptorHeap);
 
 	public:
 		virtual ~Shader();
@@ -47,18 +56,9 @@ namespace EffekseerRendererDX12
 		virtual void OnLostDevice();
 		virtual void OnResetDevice();
 
-		//TODO: このあたりをどうするかちょっと考えるわ
-
-		/*
-			どのシェーダに渡すかはルートパラメータで判断している？
-			ということはルートシグネチャもここに持たせるべき？
-			というかコンスタントバッファとか持ってるならここで持ってるのが妥当な気がする...
-		*/
-		/*
-		ID3D11VertexShader* GetVertexShader() const { return m_vertexShader; }
-		ID3D11PixelShader* GetPixelShader() const { return m_pixelShader; }
-		ID3D11InputLayout* GetLayoutInterface() const { return m_vertexDeclaration; }
-		*/
+		D3D12_SHADER_BYTECODE& GetVertexShader() { return m_vertexShader; }
+		D3D12_SHADER_BYTECODE& GetPixelShader() { return m_pixelShader; }
+		D3D12_INPUT_LAYOUT_DESC& GetLayoutInterface() { return m_vertexDeclaration; }
 
 		void SetVertexConstantBufferSize(int32_t size);
 		void SetPixelConstantBufferSize(int32_t size);
@@ -70,6 +70,7 @@ namespace EffekseerRendererDX12
 		void SetPixelRegisterCount(int32_t count) { m_pixelRegisterCount = count; }
 
 		void SetConstantBuffer();
+
 	};
 
 }

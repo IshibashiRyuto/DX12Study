@@ -342,13 +342,11 @@ namespace EffekseerRendererDX12
 
 		::Effekseer::Matrix44::Mul(m_cameraProj, m_camera, m_proj);
 
-		/*
 
 		// ステート初期設定
 		m_renderState->GetActiveState().Reset();
 		m_renderState->Update( true );
 
-		*/
 
 		// レンダラーリセット
 		m_standardRenderer->ResetAndRenderingIfRequired();
@@ -543,8 +541,7 @@ namespace EffekseerRendererDX12
 
 	void RendererImplemented::SetLayout(Shader* shader)
 	{
-		// GetContext()->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		// GetContext()->IASetInputLayout( shader->GetLayoutInterface() );
+		GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 
 	void RendererImplemented::DrawSprites(int32_t spriteCount, int32_t vertexOffset)
@@ -555,17 +552,23 @@ namespace EffekseerRendererDX12
 				0,
 				vertexOffset );
 		*/
+		GetCommandList()->DrawIndexedInstanced(spriteCount * 2 * 3, 1, 0, vertexOffset, 0);
 	}
 
-	void RendererImplemented::DrawPolygon(int32_t vertexCount, int32_t)
+	void RendererImplemented::DrawPolygon(int32_t vertexCount, int32_t indexCount)
 	{
 		//GetContext()->DrawIndexed(indexCount, 0, 0);
+		GetCommandList()->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 	}
 
 	void RendererImplemented::BeginShader(Shader* shader)
 	{
-		//GetContext()->VSSetShader( shader->GetVertexShader(), NULL, 0 );
-		//GetContext()->PSSetShader( shader->GetPixelShader(), NULL, 0);
+		auto renderState = dynamic_cast<RenderState*>(m_renderState);
+		if (renderState != nullptr)
+		{
+			renderState->ChangeShader(shader);
+			GetCommandList()->SetPipelineState(renderState->GetPipelineState());
+		}
 	}
 
 	void RendererImplemented::EndShader(Shader* shader)

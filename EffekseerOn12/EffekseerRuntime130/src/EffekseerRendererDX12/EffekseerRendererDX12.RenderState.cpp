@@ -1,5 +1,5 @@
 #include "EffekseerRendererDX12.RenderState.h"
-
+#include "EffekseerRendererDX12.Shader.h"
 
 namespace EffekseerRendererDX12
 {
@@ -228,6 +228,13 @@ namespace EffekseerRendererDX12
 		}
 
 		return m_pipelineStateMap[m_pipelineState];
+	}
+
+	void RenderState::ChangeShader(Shader * shader)
+	{
+		m_pipelineState.VS = shader->GetVertexShader();
+		m_pipelineState.PS = shader->GetPixelShader();
+		m_pipelineState.InputLayout = shader->GetLayoutInterface();
 	}
 
 }
