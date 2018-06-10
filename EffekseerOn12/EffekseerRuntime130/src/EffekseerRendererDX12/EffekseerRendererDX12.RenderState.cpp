@@ -1,11 +1,33 @@
 #include "EffekseerRendererDX12.RenderState.h"
 #include "EffekseerRendererDX12.Shader.h"
 
+
+
 namespace EffekseerRendererDX12
 {
+	namespace Standard_VS
+	{
+#include "Shader/EffekseerRenderer.Standard_VS.h"
+	}
+
+	namespace Standard_PS
+	{
+#include "Shader/EffekseerRenderer.Standard_PS.h"
+	}
+
+
+	bool RenderState::EqualPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC & ps1, const D3D12_GRAPHICS_PIPELINE_STATE_DESC & ps2)
+	{
+		if (memcmp(&ps1, &ps2, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC)) == 0)
+		{
+			return true;
+		}
+		return false;
+	}
 
 	RenderState::RenderState(RendererImplemented* renderer, D3D12_COMPARISON_FUNC depthFunc)
 		: m_renderer(renderer)
+		, m_pipelineStateNum(0)
 	{
 		// カリングモードのテーブル作成
 		D3D12_CULL_MODE cullTbl[] =
@@ -82,6 +104,16 @@ namespace EffekseerRendererDX12
 			}
 		}
 
+		// サンプラ用デスクリプタヒープの作成
+		D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc{};
+		samplerHeapDesc.NumDescriptors = TextureWrapCount* TextureFilterCount;
+		samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+		samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		renderer->GetDevice()->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&m_samplerDescriptorHeap));
+
+		D3D12_SAMPLER_DESC samplerDesc[TextureFilterCount][TextureWrapCount];
+		D3D12_CPU_DESCRIPTOR_HANDLE descCpuHandle = m_samplerDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		D3D12_GPU_DESCRIPTOR_HANDLE descGpuHandle = m_samplerDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 		// サンプラの作成
 		for (int32_t f = 0; f < TextureFilterCount; ++f)
 		{
@@ -103,24 +135,106 @@ namespace EffekseerRendererDX12
 				{
 					0,0,
 				};
+				float borderColor[] = { 0.0f,0.0f,0.0f,0.0f };
+				samplerDesc[f][w].Filter = Filter[f];
+				samplerDesc[f][w].AddressU = Addres[w];
+				samplerDesc[f][w].AddressV = Addres[w];
+				samplerDesc[f][w].AddressW = Addres[w];
+				samplerDesc[f][w].MipLODBias = 0.0f;
+				samplerDesc[f][w].MaxAnisotropy = Anisotropic[f];
+				samplerDesc[f][w].ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+				samplerDesc[f][w].BorderColor[0] = 0.0f;
+				samplerDesc[f][w].BorderColor[1] = 0.0f;
+				samplerDesc[f][w].BorderColor[2] = 0.0f;
+				samplerDesc[f][w].BorderColor[3] = 0.0f;
+				samplerDesc[f][w].MinLOD = 0.0f;
+				samplerDesc[f][w].MaxLOD = D3D12_FLOAT32_MAX;
 
-				m_sStates[f][w].Filter = Filter[f];
-				m_sStates[f][w].AddressU = Addres[w];
-				m_sStates[f][w].AddressV = Addres[w];
-				m_sStates[f][w].AddressW = Addres[w];
-				m_sStates[f][w].MipLODBias = 0.0f;
-				m_sStates[f][w].MaxAnisotropy = Anisotropic[f];
-				m_sStates[f][w].ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-				m_sStates[f][w].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-				m_sStates[f][w].MinLOD = 0.0f;
-				m_sStates[f][w].MaxLOD = D3D12_FLOAT32_MAX;
-				m_sStates[f][w].ShaderRegister = 0;
-				m_sStates[f][w].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-				m_sStates[f][w].RegisterSpace = 0;
+				m_sState[f][w] = descGpuHandle;
+				renderer->GetDevice()->CreateSampler(&samplerDesc[f][w], descCpuHandle);
+				descCpuHandle.ptr += renderer->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+				descGpuHandle.ptr += renderer->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 			}
 		}
-		// パイプラインステートデスクの初期化
 
+
+
+		//ルートシグネチャの作成
+		{
+			ID3DBlob* signature = nullptr;
+			ID3DBlob* error = nullptr;
+
+			D3D12_DESCRIPTOR_RANGE cbRange;
+			cbRange.NumDescriptors = 1;
+			cbRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+			cbRange.BaseShaderRegister = 0;
+			cbRange.RegisterSpace = 0;
+			cbRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+			D3D12_DESCRIPTOR_RANGE samplerRange;
+			samplerRange.NumDescriptors = 1;
+			samplerRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+			samplerRange.BaseShaderRegister = 0;
+			samplerRange.RegisterSpace = 0;
+			samplerRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+			D3D12_ROOT_PARAMETER cbRootParam;
+			cbRootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			cbRootParam.DescriptorTable = { 1,&cbRange };
+			cbRootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+			D3D12_ROOT_PARAMETER samplerRootParam;
+			samplerRootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			samplerRootParam.DescriptorTable = { 1, &samplerRange };
+			samplerRootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+			D3D12_ROOT_PARAMETER rootParam[] = { cbRootParam, samplerRootParam };
+
+			D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+			rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+			rootSignatureDesc.NumParameters = 2;
+			rootSignatureDesc.pParameters = rootParam;
+			rootSignatureDesc.NumStaticSamplers = 0;
+
+			if (FAILED(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error)))
+			{
+#ifdef _DEBUG
+				MessageBox(nullptr, TEXT("Failed Create Signature."), TEXT("Failed"), MB_OK);
+#endif
+				return;
+			}
+
+			if (FAILED( 
+				renderer->GetDevice()->CreateRootSignature(
+				0,
+				signature->GetBufferPointer(),
+				signature->GetBufferSize(),
+				IID_PPV_ARGS(&m_rootSignature) ) ) )
+			{
+#ifdef _DEBUG
+				MessageBox(nullptr, TEXT("Failed Create RootSignature."), TEXT("Failed"), MB_OK);
+#endif
+				return;
+			}
+
+		}
+		// パイプラインステートデスクの初期化
+		m_pipelineState.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		m_pipelineState.pRootSignature = m_rootSignature.Get();
+		m_pipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+		m_pipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		m_pipelineState.NumRenderTargets = 1;
+		m_pipelineState.SampleDesc.Count = 1;
+		m_pipelineState.SampleDesc.Quality = 0;
+		m_pipelineState.SampleMask = UINT_MAX;
+
+		// 仮のシェーダーをセット
+		m_pipelineState.VS.BytecodeLength = sizeof(Standard_VS::g_VS);
+		m_pipelineState.VS.pShaderBytecode = Standard_VS::g_VS;
+		m_pipelineState.PS.BytecodeLength = sizeof(Standard_PS::g_PS);
+		m_pipelineState.PS.pShaderBytecode = Standard_PS::g_PS;
+
+		
 	}
 
 
@@ -177,8 +291,6 @@ namespace EffekseerRendererDX12
 			m_renderer->GetCommandList()->OMSetBlendFactor(blendFactor);
 		}
 
-		// サンプラの変更
-		// ここ、ルートシグネチャに関連するんですがそれは……
 		for (int32_t i = 0; i < 4; ++i)
 		{
 			bool changeSampler = forced;
@@ -199,20 +311,34 @@ namespace EffekseerRendererDX12
 				auto wrap = (int32_t)m_next.TextureWrapTypes[i];
 
 				// サンプラ変更処理
+				m_samplerDescriptorHandle = m_sState[filter][wrap];
 			}
 		}
 
 		// パイプラインステートの変更をコマンドに書き出し
 		if (changeDepth || changeRasterizer || changeBlend || changeSamplerEither)
 		{
-			m_renderer->GetCommandList()->SetPipelineState(GetPipelineState());
+			auto state = GetPipelineState();
+			if (state != nullptr)
+			{
+				m_renderer->GetCommandList()->SetGraphicsRootSignature(m_rootSignature.Get());
+				m_renderer->GetCommandList()->SetPipelineState(state);
+			}
 		}
 	}
 
 	ID3D12PipelineState * RenderState::GetPipelineState()
 	{
-		auto it = m_pipelineStateMap.find(m_pipelineState);
-		if (it == m_pipelineStateMap.end())
+		int key = -1;
+		for (int i = 0; i < m_pipelineStateNum; ++i)
+		{
+			if (EqualPipelineState(m_pipelineState, m_pipelineStateDescVector[i]))
+			{
+				key = i;
+				break;
+			}
+		}
+		if (key == -1)
 		{
 			ID3D12PipelineState* pso;
 			auto hr = m_renderer->GetDevice()->CreateGraphicsPipelineState(&m_pipelineState, IID_PPV_ARGS(&pso));
@@ -223,11 +349,20 @@ namespace EffekseerRendererDX12
 				return nullptr;
 #endif
 			}
-			m_pipelineStateMap[m_pipelineState] = pso;
+			key = m_pipelineStateNum;
+			++m_pipelineStateNum;
+
+			m_pipelineStateDescVector.resize(m_pipelineStateNum);
+			m_pipelineStateDescVector[key] = m_pipelineState;
+			m_pipelineStateMap[key] = pso;
 			return pso;
 		}
+		return m_pipelineStateMap[key];
+	}
 
-		return m_pipelineStateMap[m_pipelineState];
+	ID3D12RootSignature * RenderState::GetRootSignature()
+	{
+		return m_rootSignature.Get();
 	}
 
 	void RenderState::ChangeShader(Shader * shader)
@@ -235,6 +370,21 @@ namespace EffekseerRendererDX12
 		m_pipelineState.VS = shader->GetVertexShader();
 		m_pipelineState.PS = shader->GetPixelShader();
 		m_pipelineState.InputLayout = shader->GetLayoutInterface();
+		m_constantBufferDescriptorHeap = shader->GetDescriptorHeap();
 	}
+
+	void RenderState::SetDescriptorHeap()
+	{
+		ID3D12DescriptorHeap* ppHeaps[] = { m_samplerDescriptorHeap,m_constantBufferDescriptorHeap };
+		if (m_constantBufferDescriptorHeap != nullptr && m_samplerDescriptorHeap != nullptr)
+		{
+			m_renderer->GetCommandList()->SetDescriptorHeaps(2, ppHeaps);
+			//m_renderer->GetCommandList()->SetDescriptorHeaps(1, &m_samplerDescriptorHeap);
+
+			m_renderer->GetCommandList()->SetGraphicsRootDescriptorTable(1, m_samplerDescriptorHandle);
+		}
+	}
+
+	
 
 }

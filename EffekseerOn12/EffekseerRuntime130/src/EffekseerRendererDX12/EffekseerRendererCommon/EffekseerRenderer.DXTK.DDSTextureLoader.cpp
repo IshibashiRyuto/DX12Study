@@ -1606,7 +1606,7 @@ HRESULT EffekseerDirectX::CreateDDSTextureFromMemory(
 
 	auto srcBits = ddsData + offset;
 
-	for( int32_t mip = 0; mip < mipMapCount; mip++ )
+	for( uint32_t mip = 0; mip < mipMapCount; mip++ )
 	{
 		size_t numBytes = 0;
 		size_t rowBytes = 0;

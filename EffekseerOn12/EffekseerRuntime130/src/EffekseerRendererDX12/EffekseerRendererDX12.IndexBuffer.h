@@ -21,8 +21,8 @@ namespace EffekseerRendererDX12
 
 		static IndexBuffer* Create(RendererImplemented* renderer, int maxCount, bool isDynamic);
 
-		ID3D12Resource* GetnInterface() { return m_buffer; }
-		//D3D12_INDEX_BUFFER_VIEW& GetInterface() { return m_bufferView; }
+		//ID3D12Resource* GetnInterface() { return m_buffer; }
+		D3D12_INDEX_BUFFER_VIEW* GetInterface() { return &m_bufferView; }
 
 		virtual void OnLostDevice();
 		virtual void OnResetDevice();

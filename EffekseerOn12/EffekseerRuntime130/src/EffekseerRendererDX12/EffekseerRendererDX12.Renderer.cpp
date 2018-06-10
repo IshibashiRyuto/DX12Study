@@ -29,7 +29,6 @@ namespace EffekseerRendererDX12
 
 	namespace Standard_VS
 	{
-		static
 #include "Shader/EffekseerRenderer.Standard_VS.h"
 	}
 
@@ -38,7 +37,6 @@ namespace EffekseerRendererDX12
 	//-----------------------------------------------------------------------------------
 	namespace Standard_PS
 	{
-		static
 #include "Shader/EffekseerRenderer.Standard_PS.h"
 	}
 
@@ -47,7 +45,6 @@ namespace EffekseerRendererDX12
 	//-----------------------------------------------------------------------------------
 	namespace StandardNoTexture_PS
 	{
-		static
 #include "Shader/EffekseerRenderer.StandardNoTexture_PS.h"
 	}
 
@@ -56,7 +53,6 @@ namespace EffekseerRendererDX12
 	//-----------------------------------------------------------------------------------
 	namespace Standard_Distortion_VS
 	{
-		static
 #include "Shader/EffekseerRenderer.Standard_Distortion_VS.h"
 	}
 
@@ -65,7 +61,6 @@ namespace EffekseerRendererDX12
 	//-----------------------------------------------------------------------------------
 	namespace Standard_Distortion_PS
 	{
-		static
 #include "Shader/EffekseerRenderer.Standard_Distortion_PS.h"
 	}
 
@@ -74,7 +69,6 @@ namespace EffekseerRendererDX12
 	//-----------------------------------------------------------------------------------
 	namespace StandardNoTexture_Distortion_PS
 	{
-		static
 #include "Shader/EffekseerRenderer.StandardNoTexture_Distortion_PS.h"
 	}
 
@@ -99,13 +93,12 @@ namespace EffekseerRendererDX12
 	
 	Renderer* Renderer::Create(
 		ID3D12Device* device,
-		ID3D12GraphicsCommandList* commandList,
-		ID3D12CommandAllocator* commandAllocator,//ID3D11DeviceContext context
+		ID3D12GraphicsCommandList* commandList,//ID3D11DeviceContext context
 		int32_t squareMaxCount,
 		D3D12_COMPARISON_FUNC depthFunc)
 	{
 		RendererImplemented* renderer = new RendererImplemented(squareMaxCount);
-		if (renderer->Initialize(device,commandList,commandAllocator,depthFunc))
+		if (renderer->Initialize(device,commandList,depthFunc))
 		{
 			return renderer;
 		}
@@ -116,7 +109,6 @@ namespace EffekseerRendererDX12
 		: m_device(nullptr)
 		//, m_context( nullptr)
 		, m_commandList(nullptr)
-		, m_commandAllocator(nullptr)
 		, m_vertexBuffer(nullptr)
 		, m_indexBuffer(nullptr)
 		, m_squareMaxCount(squareMaxCount)
@@ -189,11 +181,10 @@ namespace EffekseerRendererDX12
 		}
 	}
 
-	bool RendererImplemented::Initialize(ID3D12Device* device,ID3D12GraphicsCommandList* commandList, ID3D12CommandAllocator* commandAllocator, D3D12_COMPARISON_FUNC depthFunc)
+	bool RendererImplemented::Initialize(ID3D12Device* device,ID3D12GraphicsCommandList* commandList, D3D12_COMPARISON_FUNC depthFunc)
 	{
 		m_device = device;
 		m_commandList = commandList;
-		m_commandAllocator = commandAllocator;
 		m_depthFunc = depthFunc;
 
 		// 頂点の生成
@@ -265,6 +256,24 @@ namespace EffekseerRendererDX12
 			"StandardRenderer", decl, ARRAYSIZE(decl));
 
 		if (m_shader == nullptr)
+		{
+			return false;
+		}
+
+
+		// 参照カウントの調整
+		Release();
+
+		m_shader_no_texture = Shader::Create(
+			this,
+			Standard_VS::g_VS,
+			sizeof(Standard_VS::g_VS),
+			StandardNoTexture_PS::g_PS,
+			sizeof(StandardNoTexture_PS::g_PS),
+			"StandardRenderer No Texture",
+			decl, ARRAYSIZE(decl));
+
+		if (m_shader_no_texture == nullptr)
 		{
 			return false;
 		}
@@ -347,6 +356,11 @@ namespace EffekseerRendererDX12
 		m_renderState->GetActiveState().Reset();
 		m_renderState->Update( true );
 
+		//シェーダコンスタントバッファのリセット
+		m_shader->ResetConstantBuffer();
+		m_shader_no_texture->ResetConstantBuffer();
+		m_shader_distortion->ResetConstantBuffer();
+		m_shader_no_texture_distortion->ResetConstantBuffer();
 
 		// レンダラーリセット
 		m_standardRenderer->ResetAndRenderingIfRequired();
@@ -519,19 +533,24 @@ namespace EffekseerRendererDX12
 		uint32_t vertexSize = size;
 		uint32_t offset = 0;
 		//GetContext()->IASetVertexBuffers(0,1,&vBuf,&vertexSize, &offset );
+#ifdef _DEBUG
+		MessageBox(nullptr, "ダメです", "dame", MB_OK);
+#endif
 	}
 
 	void RendererImplemented::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t size)
 	{
-		ID3D12Resource* vBuf = vertexBuffer->GetInterface();
+		//ID3D12Resource* vBuf = vertexBuffer->GetInterface();
 		uint32_t vertexSize = size;
 		uint32_t offset = 0;
 		//GetContext()->IASetVertexBuffers(0,1,&vBuf,&vertexSize,&offset);
+		GetCommandList()->IASetVertexBuffers(0, 1, vertexBuffer->GetInterface());
 	}
 
 	void RendererImplemented::SetIndexBuffer(IndexBuffer* indexBuffer)
 	{
 		//GetContext()->IASetIndexBuffer( indexBuffer->GetInterface(), DXGI_FORMAT_R16_UINT, 0);
+		GetCommandList()->IASetIndexBuffer(indexBuffer->GetInterface());
 	}
 
 	void RendererImplemented::SetIndexBuffer(ID3D12Resource* indexBuffer)
@@ -568,6 +587,7 @@ namespace EffekseerRendererDX12
 		{
 			renderState->ChangeShader(shader);
 			GetCommandList()->SetPipelineState(renderState->GetPipelineState());
+			renderState->SetDescriptorHeap();
 		}
 	}
 

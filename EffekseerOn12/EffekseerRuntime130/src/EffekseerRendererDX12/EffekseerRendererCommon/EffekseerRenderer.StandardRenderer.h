@@ -169,7 +169,7 @@ public:
 			return;
 		}
 
-		int32_t vertexSize = vertexCaches.size();
+		int32_t vertexSize = (int32_t)vertexCaches.size();
 		int32_t offsetSize = 0;
 		{
 			VertexBufferBase* vb = m_renderer->GetVertexBuffer();
@@ -180,7 +180,7 @@ public:
 			{
 				// For OpenGL ES(Because OpenGL ES 3.2 and later can only realize a vertex layout variable ring buffer)
 				vb->Lock();
-				data = vb->GetBufferDirect(vertexCaches.size());
+				data = (int32_t*)vb->GetBufferDirect(vertexCaches.size());
 				if (data == nullptr)
 				{
 					vertexCaches.clear();
@@ -189,7 +189,7 @@ public:
 				memcpy(data, vertexCaches.data(), vertexCaches.size());
 				vb->Unlock();
 			}
-			else if (vb->RingBufferLock(vertexCaches.size(), offsetSize, data))
+			else if (vb->RingBufferLock((int32_t)vertexCaches.size(), (int32_t)offsetSize, data))
 			{
 				assert(data != nullptr);
 				memcpy(data, vertexCaches.data(), vertexCaches.size());

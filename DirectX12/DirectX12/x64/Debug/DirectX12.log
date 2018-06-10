@@ -1,5 +1,3 @@
-﻿FXC : warning X4717: Effects deprecated for D3DCompiler_47
-  
-  compilation object save succeeded; see D:\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\ProjectionScreenTest2.cso
+﻿  Dx12Device.cpp
   DirectX12.vcxproj -> D:\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\DirectX12.exe
   DirectX12.vcxproj -> D:\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\DirectX12.pdb (Partial PDB)

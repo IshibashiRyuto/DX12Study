@@ -28,8 +28,8 @@ namespace EffekseerRendererDX12
 
 		static VertexBuffer* Create(RendererImplemented* renderer, int size, bool isDynamic);
 
-		ID3D12Resource* GetInterface() { return m_buffer; }
-		//D3D12_VERTEX_BUFFER_VIEW& GetInterface() { return m_bufferView; }
+		//ID3D12Resource* GetInterface() { return m_buffer; }
+		D3D12_VERTEX_BUFFER_VIEW* GetInterface() { return &m_bufferView; }
 
 		virtual void OnLostDevice();
 		virtual void OnResetDevice();

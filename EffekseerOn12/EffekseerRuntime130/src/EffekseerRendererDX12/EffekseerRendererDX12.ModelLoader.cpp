@@ -147,4 +147,13 @@ namespace EffekseerRendererDX12
 		return nullptr;
 
 	}
+
+	void ModelLoader::Unload(void* data)
+	{
+		if (data != nullptr)
+		{
+			Model* model = (Model*)data;
+			delete model;
+		}
+	}
 }

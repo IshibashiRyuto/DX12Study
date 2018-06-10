@@ -55,7 +55,7 @@ namespace EffekseerRendererDX12
 		D3D12_INDEX_BUFFER_VIEW ibv;
 		ibv.BufferLocation = ib->GetGPUVirtualAddress();
 		ibv.Format = DXGI_FORMAT_R16_UINT;
-		ibv.SizeInBytes = hBufferDesc.Width;
+		ibv.SizeInBytes = (UINT)hBufferDesc.Width;
 
 		return new IndexBuffer(renderer, ib, ibv, maxCount, isDynamic);
 	}

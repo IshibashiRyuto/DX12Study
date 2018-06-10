@@ -282,7 +282,6 @@ namespace EffekseerRendererDX12
 		ID3D11DeviceContext*	m_context;
 		*/
 		ID3D12GraphicsCommandList* m_commandList;
-		ID3D12CommandAllocator* m_commandAllocator;
 
 		VertexBuffer*		m_vertexBuffer;
 		IndexBuffer*		m_indexBuffer;
@@ -343,7 +342,7 @@ namespace EffekseerRendererDX12
 		*/
 
 		//bool Initialize(ID3D12Device* device, /*ID3D11DeviceContext* context,*/ D3D12_COMPARISON_FUNC depthFunc);
-		bool Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ID3D12CommandAllocator* commandAllocator, D3D12_COMPARISON_FUNC depthFunc);
+		bool Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, D3D12_COMPARISON_FUNC depthFunc);
 
 		void Destroy();
 

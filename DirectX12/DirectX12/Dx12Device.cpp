@@ -728,7 +728,7 @@ bool Dx12Device::CreateDevice(HWND hwnd)
 
 
 		cbvDesc.BufferLocation = _materialsConstantBuffer->GetGPUVirtualAddress();
-		auto bufferSize = (sizeof(Material::diffuseColor) + 0xff)&~0xff;
+		auto bufferSize = (sizeof(Material::diffuseColor) +0xff)&~0xff;
 		cbvDesc.SizeInBytes = (UINT)bufferSize;
 
 
@@ -798,7 +798,6 @@ void Dx12Device::Render()
 	// CBVディスクリプタテーブルの設定
 	_commandList->SetGraphicsRootDescriptorTable(1, _cbvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
-	
 	// ビューポートのセット
 	_commandList->RSSetViewports(1, &vp);
 

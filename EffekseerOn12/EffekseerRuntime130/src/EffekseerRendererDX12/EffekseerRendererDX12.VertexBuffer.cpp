@@ -128,19 +128,19 @@ namespace EffekseerRendererDX12
 
 		if (m_isLock)
 		{
-			char* buf;
-			m_buffer->Map(0, nullptr, (void**)buf);
+			char* buf = nullptr;
+			m_buffer->Map(0, nullptr, (void**)&buf);
 			memcpy(buf, m_resource, m_size);
 			m_buffer->Unmap(0, nullptr);
 		}
 
 		if (m_ringBufferLock)
 		{
-			char* buf;
-			m_buffer->Map(0, nullptr, (void**)buf);
+			char* buf = nullptr;
+			auto result = m_buffer->Map(0, nullptr, (void**)&buf);
 
 			uint8_t* dst = (uint8_t*)buf;
-			buf += m_ringLockedOffset;
+			dst += m_ringLockedOffset;
 
 			uint8_t* src = (uint8_t*)m_resource;
 

@@ -21,9 +21,14 @@ namespace EffekseerRendererDX12
 		// TODO: ディスクリプタで管理しよう
 		void*					m_vertexConstantBuffer;
 		void*					m_pixelConstantBuffer;
+		void*					m_vertexConstantBufferStart;
+		void*					m_pixelConstantBufferStart;
 
 		int32_t					m_vertexRegisterCount;
 		int32_t					m_pixelRegisterCount;
+
+		int32_t					m_vertexBufferSize;
+		int32_t					m_pixelBufferSize;
 
 		ID3D12DescriptorHeap* m_constantBufferDescriptorHeap;
 		D3D12_CPU_DESCRIPTOR_HANDLE m_handle;
@@ -37,8 +42,7 @@ namespace EffekseerRendererDX12
 			const D3D12_SHADER_BYTECODE& vertexShader,
 			const D3D12_SHADER_BYTECODE& pixelShader,
 			const D3D12_INPUT_LAYOUT_DESC& vertexDeclaration,
-			D3D12_INPUT_ELEMENT_DESC* inputElements,
-			ID3D12DescriptorHeap* constantBufferDescriptorHeap);
+			D3D12_INPUT_ELEMENT_DESC* inputElements);
 
 	public:
 		virtual ~Shader();
@@ -70,6 +74,10 @@ namespace EffekseerRendererDX12
 		void SetPixelRegisterCount(int32_t count) { m_pixelRegisterCount = count; }
 
 		void SetConstantBuffer();
+
+		void ResetConstantBuffer();
+
+		ID3D12DescriptorHeap* GetDescriptorHeap() { return m_constantBufferDescriptorHeap; }
 
 	};
 

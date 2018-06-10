@@ -63,9 +63,6 @@
     <ClCompile Include="EffekseerRendererDX12.Renderer.cpp">
       <Filter>EffekseerRenderer</Filter>
     </ClCompile>
-    <ClCompile Include="EffekseerRenderer.DDSTextureLoader.cpp">
-      <Filter>EffekseerRenderer</Filter>
-    </ClCompile>
     <ClCompile Include="EffekseerRendererDX12.Shader.cpp">
       <Filter>EffekseerRenderer</Filter>
     </ClCompile>
@@ -134,9 +131,6 @@
     <ClInclude Include="EffekseerRendererDX12.VertexBuffer.h">
       <Filter>EffekseerRenderer</Filter>
     </ClInclude>
-    <ClInclude Include="EffekseerRenderer.DDSTextureLoader.h">
-      <Filter>EffekseerRenderer</Filter>
-    </ClInclude>
     <ClInclude Include="EffekseerRendererDX12.ModelRenderer.h">
       <Filter>EffekseerRenderer</Filter>
     </ClInclude>
@@ -161,5 +155,6 @@
     <ClInclude Include="EffekseerRendererDX12.RenderState.h">
       <Filter>EffekseerRenderer</Filter>
     </ClInclude>
+    <ClInclude Include="EffekseerRendererDX12.h" />
   </ItemGroup>
 </Project>
