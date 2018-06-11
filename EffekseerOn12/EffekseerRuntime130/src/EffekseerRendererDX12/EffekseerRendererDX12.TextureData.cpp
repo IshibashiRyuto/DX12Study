@@ -3,7 +3,7 @@
 
 namespace EffekseerRendererDX12
 {
-	TextureData::TextureData(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& srvDesc)
+	TextureData::TextureData(ID3D12Resource* resource, D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc)
 		: m_resource(resource)
 		, m_srvDesc(srvDesc)
 	{
@@ -11,7 +11,7 @@ namespace EffekseerRendererDX12
 	}
 	TextureData * TextureData::Create(ID3D12Resource * resource)
 	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = 1;

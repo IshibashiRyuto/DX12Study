@@ -19,7 +19,6 @@ namespace EffekseerRendererDX12
 		D3D12_INPUT_LAYOUT_DESC m_vertexDeclaration;
 		
 
-		// TODO: ディスクリプタで管理しよう
 		void*					m_vertexConstantBuffer;
 		void*					m_pixelConstantBuffer;
 		void*					m_vertexConstantBufferStart;
@@ -31,13 +30,18 @@ namespace EffekseerRendererDX12
 		int32_t					m_vertexBufferSize;
 		int32_t					m_pixelBufferSize;
 
+		int32_t					m_srvStartRootParamIdx{};
+
 		ID3D12DescriptorHeap* m_constantBufferDescriptorHeap;
 		D3D12_CPU_DESCRIPTOR_HANDLE m_handle;
+		D3D12_GPU_DESCRIPTOR_HANDLE m_GPUHandle;
 
 		ComPtr<ID3D12Resource> m_constantBufferToVS;
 		D3D12_CONSTANT_BUFFER_VIEW_DESC m_cbvToVS;
 		ComPtr<ID3D12Resource> m_constantBufferToPS;
 		D3D12_CONSTANT_BUFFER_VIEW_DESC m_cbvToPS;
+
+		ComPtr<ID3D12RootSignature> m_rootSignature;
 
 		Shader(RendererImplemented* renderer,
 			const D3D12_SHADER_BYTECODE& vertexShader,
@@ -80,7 +84,13 @@ namespace EffekseerRendererDX12
 
 		ID3D12DescriptorHeap* GetDescriptorHeap() { return m_constantBufferDescriptorHeap; }
 
-		void SetTextureData(EffekseerRendererDX12::TextureData* textureData);
+		ID3D12RootSignature* GetRootSignature() { return m_rootSignature.Get(); }
+
+		void SetTextureData(EffekseerRendererDX12::TextureData* textureData, int32_t rootParameterOffset = 0);
+
+		void CreateRootSignature(D3D12_ROOT_PARAMETER *rootParam, int32_t size);
+
+		void SetShaderResourceViewStartRootParamIdx(int32_t rootParamIndex);
 
 	};
 

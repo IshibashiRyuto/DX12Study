@@ -27,7 +27,7 @@ namespace EffekseerRendererDX12
 		D3D12_RASTERIZER_DESC m_rStates[CulTypeCount];
 		D3D12_DEPTH_STENCIL_DESC m_dStates[DepthTestCount][DepthWriteCount];
 		D3D12_GPU_DESCRIPTOR_HANDLE m_sState[TextureFilterCount][TextureWrapCount];
-		D3D12_GPU_DESCRIPTOR_HANDLE m_samplerDescriptorHandle;
+		D3D12_GPU_DESCRIPTOR_HANDLE m_samplerDescriptorHandle[4];
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC m_pipelineState;
 
 		ID3D12DescriptorHeap* m_constantBufferDescriptorHeap;
@@ -36,7 +36,6 @@ namespace EffekseerRendererDX12
 		int m_pipelineStateNum;
 		std::vector< D3D12_GRAPHICS_PIPELINE_STATE_DESC> m_pipelineStateDescVector;
 		std::map<int, ID3D12PipelineState*> m_pipelineStateMap;
-		ComPtr<ID3D12RootSignature> m_rootSignature;
 
 		// パイプラインステートの比較
 		bool EqualPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& ps1, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& ps2);

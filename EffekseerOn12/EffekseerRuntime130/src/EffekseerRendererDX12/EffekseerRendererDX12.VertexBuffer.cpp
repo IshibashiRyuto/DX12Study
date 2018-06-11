@@ -58,7 +58,7 @@ namespace EffekseerRendererDX12
 
 		D3D12_VERTEX_BUFFER_VIEW vbv;
 		vbv.BufferLocation = vb->GetGPUVirtualAddress();
-		vbv.StrideInBytes = sizeof(float);
+		vbv.StrideInBytes = sizeof(float)*12;
 		vbv.SizeInBytes = size;
 
 		return new VertexBuffer(renderer, vb, vbv, size, isDynamic);

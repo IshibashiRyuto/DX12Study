@@ -159,68 +159,9 @@ namespace EffekseerRendererDX12
 
 
 
-		//ルートシグネチャの作成
-		{
-			ID3DBlob* signature = nullptr;
-			ID3DBlob* error = nullptr;
-
-			D3D12_DESCRIPTOR_RANGE cbRange;
-			cbRange.NumDescriptors = 1;
-			cbRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-			cbRange.BaseShaderRegister = 0;
-			cbRange.RegisterSpace = 0;
-			cbRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-			D3D12_DESCRIPTOR_RANGE samplerRange;
-			samplerRange.NumDescriptors = 1;
-			samplerRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-			samplerRange.BaseShaderRegister = 0;
-			samplerRange.RegisterSpace = 0;
-			samplerRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-			D3D12_ROOT_PARAMETER cbRootParam;
-			cbRootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			cbRootParam.DescriptorTable = { 1,&cbRange };
-			cbRootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-			D3D12_ROOT_PARAMETER samplerRootParam;
-			samplerRootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			samplerRootParam.DescriptorTable = { 1, &samplerRange };
-			samplerRootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-			D3D12_ROOT_PARAMETER rootParam[] = { cbRootParam, samplerRootParam };
-
-			D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-			rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-			rootSignatureDesc.NumParameters = 2;
-			rootSignatureDesc.pParameters = rootParam;
-			rootSignatureDesc.NumStaticSamplers = 0;
-
-			if (FAILED(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error)))
-			{
-#ifdef _DEBUG
-				MessageBox(nullptr, TEXT("Failed Create Signature."), TEXT("Failed"), MB_OK);
-#endif
-				return;
-			}
-
-			if (FAILED( 
-				renderer->GetDevice()->CreateRootSignature(
-				0,
-				signature->GetBufferPointer(),
-				signature->GetBufferSize(),
-				IID_PPV_ARGS(&m_rootSignature) ) ) )
-			{
-#ifdef _DEBUG
-				MessageBox(nullptr, TEXT("Failed Create RootSignature."), TEXT("Failed"), MB_OK);
-#endif
-				return;
-			}
-
-		}
 		// パイプラインステートデスクの初期化
 		m_pipelineState.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-		m_pipelineState.pRootSignature = m_rootSignature.Get();
+		m_pipelineState.pRootSignature = nullptr;
 		m_pipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		m_pipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		m_pipelineState.NumRenderTargets = 1;
@@ -311,7 +252,7 @@ namespace EffekseerRendererDX12
 				auto wrap = (int32_t)m_next.TextureWrapTypes[i];
 
 				// サンプラ変更処理
-				m_samplerDescriptorHandle = m_sState[filter][wrap];
+				m_samplerDescriptorHandle[i] = m_sState[filter][wrap];
 			}
 		}
 
@@ -321,7 +262,8 @@ namespace EffekseerRendererDX12
 			auto state = GetPipelineState();
 			if (state != nullptr)
 			{
-				m_renderer->GetCommandList()->SetGraphicsRootSignature(m_rootSignature.Get());
+				//m_renderer->GetCommandList()->SetGraphicsRootSignature(m_rootSignature.Get());
+				m_renderer->GetCommandList()->SetGraphicsRootSignature(m_pipelineState.pRootSignature);
 				m_renderer->GetCommandList()->SetPipelineState(state);
 			}
 		}
@@ -360,17 +302,13 @@ namespace EffekseerRendererDX12
 		return m_pipelineStateMap[key];
 	}
 
-	ID3D12RootSignature * RenderState::GetRootSignature()
-	{
-		return m_rootSignature.Get();
-	}
-
 	void RenderState::ChangeShader(Shader * shader)
 	{
 		m_pipelineState.VS = shader->GetVertexShader();
 		m_pipelineState.PS = shader->GetPixelShader();
 		m_pipelineState.InputLayout = shader->GetLayoutInterface();
 		m_constantBufferDescriptorHeap = shader->GetDescriptorHeap();
+		m_pipelineState.pRootSignature = shader->GetRootSignature();
 	}
 
 	void RenderState::SetDescriptorHeap()
@@ -379,9 +317,10 @@ namespace EffekseerRendererDX12
 		if (m_constantBufferDescriptorHeap != nullptr && m_samplerDescriptorHeap != nullptr)
 		{
 			m_renderer->GetCommandList()->SetDescriptorHeaps(2, ppHeaps);
-			//m_renderer->GetCommandList()->SetDescriptorHeaps(1, &m_samplerDescriptorHeap);
-
-			m_renderer->GetCommandList()->SetGraphicsRootDescriptorTable(1, m_samplerDescriptorHandle);
+			for (int i = 0; i < 4; ++i)
+			{
+				m_renderer->GetCommandList()->SetGraphicsRootDescriptorTable(i, m_samplerDescriptorHandle[i]);
+			}
 		}
 	}
 

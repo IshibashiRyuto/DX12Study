@@ -63,16 +63,16 @@ namespace EffekseerRendererDX12
 			{
 				if (::EffekseerRenderer::PngTextureLoader::Load(data_texture, size_texture, false))
 				{
-					D3D12_RESOURCE_DESC resourceDesc;
+					D3D12_RESOURCE_DESC resourceDesc{};
 					resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 					resourceDesc.Width = ::EffekseerRenderer::PngTextureLoader::GetWidth();
 					resourceDesc.Height = ::EffekseerRenderer::PngTextureLoader::GetHeight();
-					resourceDesc.MipLevels = 1;
 					resourceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 					resourceDesc.DepthOrArraySize = 1;
 					resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 					resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 					resourceDesc.SampleDesc.Count = 1;
+					resourceDesc.SampleDesc.Quality = 0;
 
 					
 					auto hr = device->CreateCommittedResource(
@@ -86,6 +86,10 @@ namespace EffekseerRendererDX12
 					{
 						goto Exit;
 					}
+
+					D3D12_BOX textureBox = { 0,0,0,resourceDesc.Width, resourceDesc.Height, 1 };
+					texture->WriteToSubresource(0, &textureBox, ::EffekseerRenderer::PngTextureLoader::GetData().data(),
+						resourceDesc.Width * 4, resourceDesc.Width * resourceDesc.Height * 4);
 
 					auto tex = TextureData::Create(texture);
 					textureData = new Effekseer::TextureData();

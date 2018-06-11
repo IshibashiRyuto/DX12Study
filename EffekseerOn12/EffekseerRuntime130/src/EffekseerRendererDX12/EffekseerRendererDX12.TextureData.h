@@ -8,11 +8,10 @@ namespace EffekseerRendererDX12
 	class TextureData
 	{
 	private:
-		ID3D12Resource* m_resource;
 		D3D12_SHADER_RESOURCE_VIEW_DESC m_srvDesc;
+		ID3D12Resource* m_resource;
 
-		TextureData(ID3D12Resource* resource,
-			const D3D12_SHADER_RESOURCE_VIEW_DESC& srvDesc);
+		TextureData(ID3D12Resource* resource, D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc);
 		
 
 	public:

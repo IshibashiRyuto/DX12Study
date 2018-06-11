@@ -169,11 +169,11 @@ bool App::Initialize(HWND hWnd)
 	_hit = Effekseer::Effect::Create(_manager, (const EFK_CHAR*)L"effect/hit.efk");
 
 	// エフェクトの再生
-	_fireHandle = _manager->Play(_fire, -3, -5, 12);
+	//_fireHandle = _manager->Play(_fire, -3, -5, 12);
 	_hitHandle = _manager->Play(_hit, 3, -5, 12);
 
 	// スピード設定
-	_manager->SetSpeed(_fireHandle, 0.01f);
+	_manager->SetSpeed(_fireHandle, 0.1f);
 	_manager->SetSpeed(_hitHandle, 0.01f);
 
 	return true;

@@ -312,22 +312,153 @@ namespace EffekseerRendererDX12
 		// 参照カウントの調整
 		Release();
 
+		D3D12_DESCRIPTOR_RANGE samplerRange1;
+		samplerRange1.NumDescriptors = 1;
+		samplerRange1.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+		samplerRange1.BaseShaderRegister = 0;
+		samplerRange1.RegisterSpace = 0;
+		samplerRange1.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+		D3D12_DESCRIPTOR_RANGE samplerRange2;
+		samplerRange2.NumDescriptors = 1;
+		samplerRange2.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+		samplerRange2.BaseShaderRegister = 1;
+		samplerRange2.RegisterSpace = 0;
+		samplerRange2.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+		D3D12_DESCRIPTOR_RANGE samplerRange3;
+		samplerRange3.NumDescriptors = 1;
+		samplerRange3.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+		samplerRange3.BaseShaderRegister = 2;
+		samplerRange3.RegisterSpace = 0;
+		samplerRange3.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+		D3D12_DESCRIPTOR_RANGE samplerRange4;
+		samplerRange4.NumDescriptors = 1;
+		samplerRange4.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+		samplerRange4.BaseShaderRegister = 3;
+		samplerRange4.RegisterSpace = 0;
+		samplerRange4.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+		D3D12_DESCRIPTOR_RANGE cbRange;
+		cbRange.NumDescriptors = 1;
+		cbRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+		cbRange.BaseShaderRegister = 0;
+		cbRange.RegisterSpace = 0;
+		cbRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+		D3D12_DESCRIPTOR_RANGE srvRange1;
+		srvRange1.NumDescriptors = 1;
+		srvRange1.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		srvRange1.BaseShaderRegister = 0;
+		srvRange1.RegisterSpace = 0;
+		srvRange1.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+		D3D12_DESCRIPTOR_RANGE srvRange2;
+		srvRange2.NumDescriptors = 1;
+		srvRange2.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		srvRange2.BaseShaderRegister = 1;
+		srvRange2.RegisterSpace = 0;
+		srvRange2.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+		D3D12_ROOT_PARAMETER samplerRootParam1;
+		samplerRootParam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		samplerRootParam1.DescriptorTable = { 1, &samplerRange1 };
+		samplerRootParam1.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		D3D12_ROOT_PARAMETER samplerRootParam2;
+		samplerRootParam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		samplerRootParam2.DescriptorTable = { 1, &samplerRange2 };
+		samplerRootParam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		D3D12_ROOT_PARAMETER samplerRootParam3;
+		samplerRootParam3.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		samplerRootParam3.DescriptorTable = { 1, &samplerRange3 };
+		samplerRootParam3.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		D3D12_ROOT_PARAMETER samplerRootParam4;
+		samplerRootParam4.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		samplerRootParam4.DescriptorTable = { 1, &samplerRange4 };
+		samplerRootParam4.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		D3D12_ROOT_PARAMETER vertexcbRootParam;
+		vertexcbRootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		vertexcbRootParam.DescriptorTable = { 1,&cbRange };
+		vertexcbRootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+		D3D12_ROOT_PARAMETER pixelcbRootParam;
+		pixelcbRootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		pixelcbRootParam.DescriptorTable = { 1,&cbRange };
+		pixelcbRootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		D3D12_ROOT_PARAMETER srvRootParam1;
+		srvRootParam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		srvRootParam1.DescriptorTable = { 1, &srvRange1 };
+		srvRootParam1.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		D3D12_ROOT_PARAMETER srvRootParam2;
+		srvRootParam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		srvRootParam2.DescriptorTable = { 1, &srvRange2 };
+		srvRootParam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		D3D12_ROOT_PARAMETER shader_rootParams[] = { 
+			samplerRootParam1,
+			samplerRootParam2,
+			samplerRootParam3,
+			samplerRootParam4,
+			vertexcbRootParam,
+			srvRootParam1
+		};
+
 		m_shader->SetVertexConstantBufferSize(sizeof(Effekseer::Matrix44) * 2);
 		m_shader->SetVertexRegisterCount(8);
+		m_shader->CreateRootSignature(shader_rootParams,6);
+		m_shader->SetShaderResourceViewStartRootParamIdx(5);
+
+		D3D12_ROOT_PARAMETER shader_no_texture_rootParams[] = {
+			samplerRootParam1,
+			samplerRootParam2,
+			samplerRootParam3,
+			samplerRootParam4,
+			vertexcbRootParam,
+		};
 		m_shader_no_texture->SetVertexConstantBufferSize(sizeof(Effekseer::Matrix44) * 2);
 		m_shader_no_texture->SetVertexRegisterCount(8);
+		m_shader_no_texture->CreateRootSignature(shader_no_texture_rootParams,5);
 
+		D3D12_ROOT_PARAMETER shader_distortion_rootParams[] = {
+			samplerRootParam1,
+			samplerRootParam2,
+			samplerRootParam3,
+			samplerRootParam4,
+			vertexcbRootParam,
+			pixelcbRootParam,
+			srvRootParam1,
+			srvRootParam2
+		};
 		m_shader_distortion->SetVertexConstantBufferSize(sizeof(Effekseer::Matrix44) * 2);
 		m_shader_distortion->SetVertexRegisterCount(8);
-
 		m_shader_distortion->SetPixelConstantBufferSize(sizeof(float) * 4);
 		m_shader_distortion->SetPixelRegisterCount(1);
+		m_shader_distortion->CreateRootSignature(shader_distortion_rootParams,8);
+		m_shader_distortion->SetShaderResourceViewStartRootParamIdx(6);
 
+
+		D3D12_ROOT_PARAMETER shader_no_texture_distortion_rootParams[] = {
+			samplerRootParam1,
+			samplerRootParam2,
+			samplerRootParam3,
+			samplerRootParam4,
+			vertexcbRootParam,
+			pixelcbRootParam,
+			srvRootParam1,
+		};
 		m_shader_no_texture_distortion->SetVertexConstantBufferSize(sizeof(Effekseer::Matrix44) * 2);
 		m_shader_no_texture_distortion->SetVertexRegisterCount(8);
-
 		m_shader_no_texture_distortion->SetPixelConstantBufferSize(sizeof(float) * 4);
 		m_shader_no_texture_distortion->SetPixelRegisterCount(1);
+		m_shader_no_texture_distortion->CreateRootSignature(shader_no_texture_distortion_rootParams,7);
+		m_shader_no_texture_distortion->SetShaderResourceViewStartRootParamIdx(6);
 
 		m_standardRenderer = new EffekseerRenderer::StandardRenderer<RendererImplemented, Shader, Vertex, VertexDistortion>(
 			this, m_shader, m_shader_no_texture, m_shader_distortion, m_shader_no_texture_distortion);
@@ -571,7 +702,9 @@ namespace EffekseerRendererDX12
 		if (renderState != nullptr)
 		{
 			renderState->ChangeShader(shader);
-			GetCommandList()->SetPipelineState(renderState->GetPipelineState());
+			auto pipelineState = renderState->GetPipelineState();
+			GetCommandList()->SetPipelineState(pipelineState);
+			GetCommandList()->SetGraphicsRootSignature(shader->GetRootSignature());
 			renderState->SetDescriptorHeap();
 		}
 	}
@@ -588,8 +721,8 @@ namespace EffekseerRendererDX12
 		{
 			if (textures[i] != nullptr)
 			{
-				TextureData* texture = (TextureData*)textures[i];
-				shader->SetTextureData(texture);
+				TextureData* texture = (TextureData*)textures[i]->UserPtr;
+				shader->SetTextureData(texture,i);
 			}
 		}
 	}
