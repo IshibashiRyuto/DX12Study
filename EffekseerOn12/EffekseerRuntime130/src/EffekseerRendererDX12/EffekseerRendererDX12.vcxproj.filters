@@ -72,6 +72,9 @@
     <ClCompile Include="EffekseerRendererDX12.RenderState.cpp">
       <Filter>EffekseerRenderer</Filter>
     </ClCompile>
+    <ClCompile Include="EffekseerRendererDX12.TextureData.cpp">
+      <Filter>EffekseerRenderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EffekseerRendererCommon\EffekseerRenderer.CommonUtils.h">
@@ -156,5 +159,8 @@
       <Filter>EffekseerRenderer</Filter>
     </ClInclude>
     <ClInclude Include="EffekseerRendererDX12.h" />
+    <ClInclude Include="EffekseerRendererDX12.TextureData.h">
+      <Filter>EffekseerRenderer</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

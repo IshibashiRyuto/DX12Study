@@ -3,6 +3,7 @@
 #include"EffekseerRendererDX12.RendererImplemented.h"
 #include"EffekseerRendererDX12.DeviceObject.h"
 #include <wrl.h>
+#include "EffekseerRendererDX12.TextureData.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -78,6 +79,8 @@ namespace EffekseerRendererDX12
 		void ResetConstantBuffer();
 
 		ID3D12DescriptorHeap* GetDescriptorHeap() { return m_constantBufferDescriptorHeap; }
+
+		void SetTextureData(EffekseerRendererDX12::TextureData* textureData);
 
 	};
 

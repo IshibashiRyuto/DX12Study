@@ -532,30 +532,22 @@ namespace EffekseerRendererDX12
 		ID3D12Resource* vBuf = vertexBuffer;
 		uint32_t vertexSize = size;
 		uint32_t offset = 0;
-		//GetContext()->IASetVertexBuffers(0,1,&vBuf,&vertexSize, &offset );
-#ifdef _DEBUG
-		MessageBox(nullptr, "ƒ_ƒ‚Å‚·", "dame", MB_OK);
-#endif
 	}
 
 	void RendererImplemented::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t size)
 	{
-		//ID3D12Resource* vBuf = vertexBuffer->GetInterface();
 		uint32_t vertexSize = size;
 		uint32_t offset = 0;
-		//GetContext()->IASetVertexBuffers(0,1,&vBuf,&vertexSize,&offset);
 		GetCommandList()->IASetVertexBuffers(0, 1, vertexBuffer->GetInterface());
 	}
 
 	void RendererImplemented::SetIndexBuffer(IndexBuffer* indexBuffer)
 	{
-		//GetContext()->IASetIndexBuffer( indexBuffer->GetInterface(), DXGI_FORMAT_R16_UINT, 0);
 		GetCommandList()->IASetIndexBuffer(indexBuffer->GetInterface());
 	}
 
 	void RendererImplemented::SetIndexBuffer(ID3D12Resource* indexBuffer)
 	{
-		//GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	}
 
 	void RendererImplemented::SetLayout(Shader* shader)
@@ -565,18 +557,11 @@ namespace EffekseerRendererDX12
 
 	void RendererImplemented::DrawSprites(int32_t spriteCount, int32_t vertexOffset)
 	{
-		/*
-			GetContext->DrawIndexed(
-				spriteCount * 2 * 3,
-				0,
-				vertexOffset );
-		*/
 		GetCommandList()->DrawIndexedInstanced(spriteCount * 2 * 3, 1, 0, vertexOffset, 0);
 	}
 
 	void RendererImplemented::DrawPolygon(int32_t vertexCount, int32_t indexCount)
 	{
-		//GetContext()->DrawIndexed(indexCount, 0, 0);
 		GetCommandList()->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 	}
 
@@ -598,21 +583,15 @@ namespace EffekseerRendererDX12
 
 	void RendererImplemented::SetTextures(Shader* shader, Effekseer::TextureData** textures, int32_t count)
 	{
-		/*
-		ID3D11ShaderResourceView* srv[3];
-		for (int32_t i = 0; i < count; i++)
+
+		for (int32_t i = 0; i < count; ++i)
 		{
-			if (textures[i] == nullptr)
+			if (textures[i] != nullptr)
 			{
-				srv[i] = nullptr;
-			}
-			else
-			{
-				srv[i] = (ID3D11ShaderResourceView*)textures[i]->UserPtr;
+				TextureData* texture = (TextureData*)textures[i];
+				shader->SetTextureData(texture);
 			}
 		}
-		GetContext()->PSSetShaderResources(0, count, srv);
-		*/
 	}
 
 	void RendererImplemented::ResetRenderState()

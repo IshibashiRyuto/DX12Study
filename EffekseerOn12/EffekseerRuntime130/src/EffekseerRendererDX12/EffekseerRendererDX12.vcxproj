@@ -44,6 +44,7 @@
     <ClInclude Include="EffekseerRendererDX12.Renderer.h" />
     <ClInclude Include="EffekseerRendererDX12.RenderState.h" />
     <ClInclude Include="EffekseerRendererDX12.Shader.h" />
+    <ClInclude Include="EffekseerRendererDX12.TextureData.h" />
     <ClInclude Include="EffekseerRendererDX12.TextureLoader.h" />
     <ClInclude Include="EffekseerRendererDX12.VertexBuffer.h" />
     <ClInclude Include="EffekseerRendererDX12.RendererImplemented.h" />
@@ -68,6 +69,7 @@
     <ClCompile Include="EffekseerRendererDX12.Renderer.cpp" />
     <ClCompile Include="EffekseerRendererDX12.RenderState.cpp" />
     <ClCompile Include="EffekseerRendererDX12.Shader.cpp" />
+    <ClCompile Include="EffekseerRendererDX12.TextureData.cpp" />
     <ClCompile Include="EffekseerRendererDX12.TextureLoader.cpp" />
     <ClCompile Include="EffekseerRendererDX12.VertexBuffer.cpp" />
   </ItemGroup>

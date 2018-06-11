@@ -1,5 +1,6 @@
 #include "EffekseerRendererDX12.Shader.h"
 #include "EffekseerRendererDX12.RendererImplemented.h"
+#include "EffekseerRendererDX12.TextureData.h"
 
 namespace EffekseerRendererDX12
 {
@@ -187,6 +188,7 @@ namespace EffekseerRendererDX12
 
 			// デスクリプタをコマンドに積む処理
 			//GetRenderer()->GetCommandList()->SetGraphicsRootDescriptorTable()
+			
 
 			m_pixelConstantBuffer = (uint8_t*)m_pixelConstantBuffer + m_pixelBufferSize;
 			m_cbvToPS.BufferLocation += m_pixelBufferSize;
@@ -205,4 +207,13 @@ namespace EffekseerRendererDX12
 		m_handle = m_constantBufferDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	}
 
+	void Shader::SetTextureData(EffekseerRendererDX12::TextureData * textureData)
+	{
+
+		GetRenderer()->GetDevice()->CreateShaderResourceView(textureData->GetResource(), &textureData->GetShaderResourceView(), m_handle);
+		// デスクリプタをコマンドに積む処理
+
+		m_handle.ptr += GetRenderer()->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	}
 }
