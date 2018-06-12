@@ -30,13 +30,11 @@ namespace EffekseerRendererDX12
 
 		// debug
 		// とりあえずいっぱい作る
-		ID3D12DescriptorHeap* constantBufferDescriptorHeap;
 		D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
 		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		heapDesc.NumDescriptors = (UINT)4096;
-		renderer->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&constantBufferDescriptorHeap));
-		m_constantBufferDescriptorHeap = constantBufferDescriptorHeap;
+		renderer->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_constantBufferDescriptorHeap));
 
 		m_handle = m_constantBufferDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 		m_GPUHandle = m_constantBufferDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
@@ -96,10 +94,7 @@ namespace EffekseerRendererDX12
 
 		//ルートシグネチャの作成
 		{
-			ID3DBlob* signature = nullptr;
-			ID3DBlob* error = nullptr;
-
-
+			
 			D3D12_DESCRIPTOR_RANGE samplerRange1;
 			samplerRange1.NumDescriptors = 1;
 			samplerRange1.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
@@ -328,8 +323,8 @@ namespace EffekseerRendererDX12
 	{
 		//ルートシグネチャの作成
 		{
-			ID3DBlob* signature = nullptr;
-			ID3DBlob* error = nullptr;
+			ComPtr<ID3DBlob> signature = nullptr;
+			ComPtr<ID3DBlob> error = nullptr;
 
 			D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 			rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;

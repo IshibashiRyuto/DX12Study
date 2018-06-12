@@ -11,11 +11,11 @@ namespace EffekseerRendererDX12
 		, public DeviceObject
 	{
 	private:
-		ID3D12Resource*		m_buffer;
+		ComPtr<ID3D12Resource>		m_buffer;
 		D3D12_INDEX_BUFFER_VIEW m_bufferView;
 		void*				m_lockedResource;
 
-		IndexBuffer(RendererImplemented* renderer, ID3D12Resource* buffer, const D3D12_INDEX_BUFFER_VIEW& bufferView, int maxCount, bool isDynamic);
+		IndexBuffer(RendererImplemented* renderer, ComPtr<ID3D12Resource> buffer, const D3D12_INDEX_BUFFER_VIEW& bufferView, int maxCount, bool isDynamic);
 	public:
 		virtual ~IndexBuffer();
 

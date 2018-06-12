@@ -2,7 +2,7 @@
 
 namespace EffekseerRendererDX12
 {
-	VertexBuffer::VertexBuffer(RendererImplemented* renderer, ID3D12Resource* buffer, const D3D12_VERTEX_BUFFER_VIEW& bufferView, int size, bool isDynamic)
+	VertexBuffer::VertexBuffer(RendererImplemented* renderer, ComPtr<ID3D12Resource> buffer, const D3D12_VERTEX_BUFFER_VIEW& bufferView, int size, bool isDynamic)
 		: DeviceObject(renderer)
 		, VertexBufferBase(size, isDynamic)
 		, m_buffer(buffer)
@@ -18,7 +18,6 @@ namespace EffekseerRendererDX12
 	VertexBuffer::~VertexBuffer()
 	{
 		ES_SAFE_DELETE_ARRAY(m_lockedResource);
-		ES_SAFE_RELEASE(m_buffer);
 	}
 
 	VertexBuffer* VertexBuffer::Create(RendererImplemented* renderer, int size, bool isDynamic)
@@ -46,7 +45,7 @@ namespace EffekseerRendererDX12
 		hBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		hBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-		ID3D12Resource* vb{ nullptr };
+		ComPtr<ID3D12Resource> vb{ nullptr };
 
 		if (FAILED(renderer->GetDevice()->CreateCommittedResource(&hHeapPropertie, D3D12_HEAP_FLAG_NONE, &hBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vb))))
 		{

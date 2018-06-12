@@ -30,12 +30,12 @@ namespace EffekseerRendererDX12
 		D3D12_GPU_DESCRIPTOR_HANDLE m_samplerDescriptorHandle[4];
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC m_pipelineState;
 
-		ID3D12DescriptorHeap* m_constantBufferDescriptorHeap;
-		ID3D12DescriptorHeap* m_samplerDescriptorHeap;
+		ComPtr<ID3D12DescriptorHeap> m_constantBufferDescriptorHeap;
+		ComPtr<ID3D12DescriptorHeap> m_samplerDescriptorHeap;
 
 		int m_pipelineStateNum;
 		std::vector< D3D12_GRAPHICS_PIPELINE_STATE_DESC> m_pipelineStateDescVector;
-		std::map<int, ID3D12PipelineState*> m_pipelineStateMap;
+		std::map<int, ComPtr<ID3D12PipelineState>> m_pipelineStateMap;
 
 		// パイプラインステートの比較
 		bool EqualPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& ps1, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& ps2);
@@ -48,8 +48,6 @@ namespace EffekseerRendererDX12
 		// 現在のパイプラインステートに紐づけられたPSOを取得する
 		ID3D12PipelineState* GetPipelineState();
 
-		// ルートシグネチャを取得する
-		ID3D12RootSignature* GetRootSignature();
 
 		// シェーダを変更する
 		void ChangeShader(Shader* shader);

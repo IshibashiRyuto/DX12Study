@@ -641,10 +641,15 @@ namespace EffekseerRendererDX12
 
 	void RendererImplemented::SetBackground(ID3D12Resource* background)
 	{
+		/*
 		ES_SAFE_ADDREF(background);
 		auto p = (ID3D12Resource*)m_background.UserPtr;
 		ES_SAFE_RELEASE(p);
 		m_background.UserPtr = background;
+		*/
+		auto p = (TextureData*)m_background.UserPtr;
+		ES_SAFE_DELETE(p);
+		m_background.UserPtr = TextureData::Create(background);
 	}
 
 	EffekseerRenderer::DistortingCallback* RendererImplemented::GetDistortingCallback()

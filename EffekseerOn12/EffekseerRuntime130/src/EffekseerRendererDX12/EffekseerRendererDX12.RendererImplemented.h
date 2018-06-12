@@ -222,50 +222,6 @@ namespace EffekseerRendererDX12
 		}
 	}
 
-	// 12のコマンドリスト的に要らないので削除
-	//class OriginalState
-	//{
-	//private:
-	//	/*
-	//	ID3D11SamplerState*	m_samplers[4];
-
-	//	ID3D11BlendState*	m_blendState;
-	//	float				m_blendFactor[4];
-	//	UINT				m_blendSampleMask;
-
-	//	ID3D11DepthStencilState*	m_depthStencilState;
-	//	UINT						m_depthStencilStateRef;
-
-	//	ID3D11RasterizerState*		m_pRasterizerState;
-
-	//	ID3D11Buffer*				m_vertexConstantBuffer;
-	//	ID3D11Buffer*				m_pixelConstantBuffer;
-
-	//	ID3D11VertexShader*			m_pVS;
-	//	ID3D11PixelShader*			m_pPS;
-
-	//	ID3D11InputLayout*			m_layout;
-	//	D3D11_PRIMITIVE_TOPOLOGY	m_topology;
-
-	//	ID3D11ShaderResourceView*	m_psSRVs[4];
-	//	*/
-	//	ID3D12Resource*		m_pVB;
-	//	UINT				m_vbStrides;
-	//	UINT				m_vbOffset;
-
-	//	ID3D12Resource*		m_pIB;
-	//	DXGI_FORMAT			m_ibFormat;
-	//	UINT				m_ibOffset;
-
-	//public:
-	//	OriginalState();
-	//	~OriginalState();
-	//	void SaveState(/*ID3D11Device* device, ID3D11DeviceContext* context*/);
-	//	void LoadState(/*ID3D11Device* device, ID3D11DeviceContext* context*/);
-	//	void ReleaseState();
-	//};
-	
-
 	/*
 		@class RendererImplemented
 		ツール向けの描画機能を実装したクラス
@@ -278,9 +234,6 @@ namespace EffekseerRendererDX12
 
 	private:
 		ID3D12Device*		m_device;
-		/*
-		ID3D11DeviceContext*	m_context;
-		*/
 		ID3D12GraphicsCommandList* m_commandList;
 
 		VertexBuffer*		m_vertexBuffer;
@@ -341,7 +294,6 @@ namespace EffekseerRendererDX12
 			初期化
 		*/
 
-		//bool Initialize(ID3D12Device* device, /*ID3D11DeviceContext* context,*/ D3D12_COMPARISON_FUNC depthFunc);
 		bool Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, D3D12_COMPARISON_FUNC depthFunc);
 
 		void Destroy();
@@ -364,10 +316,6 @@ namespace EffekseerRendererDX12
 		*/
 		ID3D12Device* GetDevice();
 
-		/*
-			コンテキスト取得
-		*/
-		//ID3D11DeviceContext* GetContext();
 		/*
 			コマンドリスト取得
 		*/
@@ -494,7 +442,6 @@ namespace EffekseerRendererDX12
 		/**
 		@brief	背景を設定する。
 		*/
-		//void SetBackground(ID3D11ShaderResourceView* background) override;
 		void SetBackground(ID3D12Resource* background);
 
 

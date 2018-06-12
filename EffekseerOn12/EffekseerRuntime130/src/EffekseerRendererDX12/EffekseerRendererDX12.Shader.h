@@ -32,7 +32,7 @@ namespace EffekseerRendererDX12
 
 		int32_t					m_srvStartRootParamIdx{};
 
-		ID3D12DescriptorHeap* m_constantBufferDescriptorHeap;
+		ComPtr<ID3D12DescriptorHeap> m_constantBufferDescriptorHeap;
 		D3D12_CPU_DESCRIPTOR_HANDLE m_handle;
 		D3D12_GPU_DESCRIPTOR_HANDLE m_GPUHandle;
 
@@ -82,7 +82,7 @@ namespace EffekseerRendererDX12
 
 		void ResetConstantBuffer();
 
-		ID3D12DescriptorHeap* GetDescriptorHeap() { return m_constantBufferDescriptorHeap; }
+		ID3D12DescriptorHeap* GetDescriptorHeap() { return m_constantBufferDescriptorHeap.Get(); }
 
 		ID3D12RootSignature* GetRootSignature() { return m_rootSignature.Get(); }
 

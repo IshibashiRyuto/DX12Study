@@ -38,7 +38,7 @@ namespace EffekseerRendererDX12
 		if (reader)
 		{
 			// テクスチャ読み込み処理
-			ID3D12Resource* texture{ nullptr };
+			ComPtr<ID3D12Resource> texture{ nullptr };
 			Effekseer::TextureData* textureData{ nullptr };
 
 			D3D12_HEAP_PROPERTIES heapProp;
@@ -91,7 +91,7 @@ namespace EffekseerRendererDX12
 					texture->WriteToSubresource(0, &textureBox, ::EffekseerRenderer::PngTextureLoader::GetData().data(),
 						resourceDesc.Width * 4, resourceDesc.Width * resourceDesc.Height * 4);
 
-					auto tex = TextureData::Create(texture);
+					auto tex = TextureData::Create(texture.Get());
 					textureData = new Effekseer::TextureData();
 					textureData->UserPtr = tex;
 					textureData->UserID = 0;
@@ -114,8 +114,6 @@ namespace EffekseerRendererDX12
 		if (data != nullptr && data->UserPtr != nullptr)
 		{
 			//テクスチャデータの削除処理
-			//auto texture = (ID3D12ShaderResourceView*)data->UserPtr;
-			//texture->Release();
 			auto texture = (TextureData*)data->UserPtr;
 			ES_SAFE_DELETE(texture);
 		}

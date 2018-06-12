@@ -12,7 +12,7 @@ namespace EffekseerRendererDX12
 		, public ::EffekseerRenderer::VertexBufferBase
 	{
 	private:
-		ID3D12Resource*		m_buffer;
+		ComPtr<ID3D12Resource>		m_buffer;
 		D3D12_VERTEX_BUFFER_VIEW m_bufferView;
 		void*				m_lockedResource;
 
@@ -22,7 +22,7 @@ namespace EffekseerRendererDX12
 		int32_t				m_ringLockedOffset;
 		int32_t				m_ringLockedSize;
 
-		VertexBuffer(RendererImplemented* renderer, ID3D12Resource* buffer, const D3D12_VERTEX_BUFFER_VIEW& bufferView, int size, bool isDynamic);
+		VertexBuffer(RendererImplemented* renderer, ComPtr<ID3D12Resource> buffer, const D3D12_VERTEX_BUFFER_VIEW& bufferView, int size, bool isDynamic);
 	public:
 		virtual ~VertexBuffer();
 

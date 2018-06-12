@@ -3,7 +3,7 @@
 namespace EffekseerRendererDX12
 {
 
-	IndexBuffer::IndexBuffer(RendererImplemented* renderer, ID3D12Resource* buffer, const D3D12_INDEX_BUFFER_VIEW& bufferView, int maxCount, bool isDynamic)
+	IndexBuffer::IndexBuffer(RendererImplemented* renderer, ComPtr<ID3D12Resource> buffer, const D3D12_INDEX_BUFFER_VIEW& bufferView, int maxCount, bool isDynamic)
 		: DeviceObject(renderer)
 		, IndexBufferBase(maxCount, isDynamic)
 		, m_buffer(buffer)
@@ -42,7 +42,7 @@ namespace EffekseerRendererDX12
 		hBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		hBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-		ID3D12Resource* ib{ nullptr };
+		ComPtr<ID3D12Resource> ib{ nullptr };
 
 		if (FAILED(renderer->GetDevice()->CreateCommittedResource(&hHeapPropertie, D3D12_HEAP_FLAG_NONE, &hBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&ib))) )
 		{

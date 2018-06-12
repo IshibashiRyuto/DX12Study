@@ -286,7 +286,7 @@ namespace EffekseerRendererDX12
 			{
 				return nullptr;
 			}
-			ID3D12PipelineState* pso;
+			ComPtr<ID3D12PipelineState> pso;
 			auto hr = m_renderer->GetDevice()->CreateGraphicsPipelineState(&m_pipelineState, IID_PPV_ARGS(&pso));
 			if (FAILED(hr))
 			{
@@ -301,9 +301,9 @@ namespace EffekseerRendererDX12
 			m_pipelineStateDescVector.resize(m_pipelineStateNum);
 			m_pipelineStateDescVector[key] = m_pipelineState;
 			m_pipelineStateMap[key] = pso;
-			return pso;
+			return pso.Get();
 		}
-		return m_pipelineStateMap[key];
+		return m_pipelineStateMap[key].Get();
 	}
 
 	void RenderState::ChangeShader(Shader * shader)
@@ -317,7 +317,7 @@ namespace EffekseerRendererDX12
 
 	void RenderState::SetDescriptorHeap()
 	{
-		ID3D12DescriptorHeap* ppHeaps[] = { m_samplerDescriptorHeap,m_constantBufferDescriptorHeap };
+		ID3D12DescriptorHeap* ppHeaps[] = { m_samplerDescriptorHeap.Get(),m_constantBufferDescriptorHeap.Get() };
 		if (m_constantBufferDescriptorHeap != nullptr && m_samplerDescriptorHeap != nullptr)
 		{
 			m_renderer->GetCommandList()->SetDescriptorHeaps(2, ppHeaps);
