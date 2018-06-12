@@ -667,9 +667,9 @@ namespace EffekseerRendererDX12
 
 	void RendererImplemented::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t size)
 	{
-		uint32_t vertexSize = size;
-		uint32_t offset = 0;
-		GetCommandList()->IASetVertexBuffers(0, 1, vertexBuffer->GetInterface());
+		auto vertexBufferView = vertexBuffer->GetInterface();
+		vertexBufferView->StrideInBytes = size;
+		GetCommandList()->IASetVertexBuffers(0, 1, vertexBufferView);
 	}
 
 	void RendererImplemented::SetIndexBuffer(IndexBuffer* indexBuffer)

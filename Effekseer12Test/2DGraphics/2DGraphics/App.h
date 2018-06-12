@@ -47,6 +47,11 @@ public:
 	/// 描画処理
 	void Render();
 
+
+	/// @fn Tarminate
+	/// 終了処理
+	void Tarminate();
+
 private:
 	const int INSTANCING_NUM = 4096;			// オブジェクトのインスタンシング数
 

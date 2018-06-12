@@ -195,10 +195,13 @@ namespace EffekseerRendererDX12
 				samplerRootParam3,
 				samplerRootParam4,
 				vertexcbRootParam,
-				srvRootParam1
+				pixelcbRootParam,
+				srvRootParam1,
+				srvRootParam2,
 			};
 
-			CreateRootSignature(shader_rootParams, 7);
+			CreateRootSignature(shader_rootParams, 8);
+			SetShaderResourceViewStartRootParamIdx(6);
 
 		}
 

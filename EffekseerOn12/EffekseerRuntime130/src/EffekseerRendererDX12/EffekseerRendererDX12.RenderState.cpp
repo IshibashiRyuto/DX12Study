@@ -282,6 +282,10 @@ namespace EffekseerRendererDX12
 		}
 		if (key == -1)
 		{
+			if (m_pipelineState.pRootSignature == nullptr)
+			{
+				return nullptr;
+			}
 			ID3D12PipelineState* pso;
 			auto hr = m_renderer->GetDevice()->CreateGraphicsPipelineState(&m_pipelineState, IID_PPV_ARGS(&pso));
 			if (FAILED(hr))

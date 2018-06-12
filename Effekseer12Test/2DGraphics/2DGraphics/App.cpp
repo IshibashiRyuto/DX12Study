@@ -169,13 +169,13 @@ bool App::Initialize(HWND hWnd)
 	_hit = Effekseer::Effect::Create(_manager, (const EFK_CHAR*)L"effect/hit.efk");
 
 	// エフェクトの再生
-	//_fireHandle = _manager->Play(_fire, -3, -5, 12);
+	_fireHandle = _manager->Play(_fire, -3, -5, 12);
 	_hitHandle = _manager->Play(_hit, 3, -5, 12);
 
-	// スピード設定
-	_manager->SetSpeed(_fireHandle, 0.1f);
-	_manager->SetSpeed(_hitHandle, 0.01f);
 
+	// スピード設定
+	_manager->SetSpeed(_fireHandle, 0.8f);
+	_manager->SetSpeed(_hitHandle, 0.8f);
 	return true;
 }
 
@@ -216,7 +216,6 @@ void App::Render()
 
 	// バンドルの実行
 	_commandList->ExecuteBundle(_bundle.Get());
-
 	*/
 	Effekseer::Vector3D eye2 = { 0,0,-3 };
 	Effekseer::Vector3D target2 = { 0,0,1 };
@@ -242,7 +241,6 @@ void App::Render()
 	_manager->Draw();
 	_renderer->EndRendering();
 
-
 	// 描画終了処理
 	_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_renderTargets[backBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	_commandList->Close();
@@ -261,6 +259,16 @@ void App::Render()
 
 	// 画面のスワップ
 	_swapChain->Present(1, 0);
+}
+
+void App::Tarminate()
+{
+	ES_SAFE_RELEASE(_fire);
+	ES_SAFE_RELEASE(_hit);
+	
+	_manager->Destroy();
+	//_sound->Destroy();
+	_renderer->Destroy();
 }
 
 

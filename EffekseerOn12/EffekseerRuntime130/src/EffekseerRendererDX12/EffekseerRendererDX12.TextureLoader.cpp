@@ -116,7 +116,7 @@ namespace EffekseerRendererDX12
 			//テクスチャデータの削除処理
 			//auto texture = (ID3D12ShaderResourceView*)data->UserPtr;
 			//texture->Release();
-			auto texture = (TextureData*)data;
+			auto texture = (TextureData*)data->UserPtr;
 			ES_SAFE_DELETE(texture);
 		}
 

@@ -66,9 +66,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpStr, int nCmdWnd)
 		}
 	}
 
+	app.Tarminate();
 
 	// ウィンドウクラスの開放
 	UnregisterClass(w.lpszClassName, w.hInstance);
+
 
 
 	return 0;
