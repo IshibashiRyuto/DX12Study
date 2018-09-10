@@ -1,3 +1,16 @@
-﻿  Dx12Device.cpp
-  DirectX12.vcxproj -> D:\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\DirectX12.exe
-  DirectX12.vcxproj -> D:\Ishibashi_Github\DX12Study\DirectX12\x64\Debug\DirectX12.pdb (Partial PDB)
+﻿FXC : warning X4717: Effects deprecated for D3DCompiler_47
+  
+  compilation object save succeeded; see C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\ProjectionScreenTest2.cso
+FXC : warning X4717: Effects deprecated for D3DCompiler_47
+  
+  compilation object save succeeded; see C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\GSTest.cso
+FXC : warning X4717: Effects deprecated for D3DCompiler_47
+C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\DirectX12\shader.hlsl(46,5-49): warning X3206: implicit truncation of vector type
+  
+  compilation object save succeeded; see C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\shader.cso
+  MMDLoader.cpp
+  main.cpp
+  Dx12Device.cpp
+  コードを生成中...
+  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.exe
+  DirectX12.vcxproj -> C:\Users\drago\Desktop\DirectX12\DX12Study\DirectX12\x64\Debug\DirectX12.pdb (Partial PDB)
